@@ -1,0 +1,27 @@
+{
+  "name": "codename",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Angular frontend and AdonisJS REST API",
+  "workspaces": [
+    "app",
+    "server"
+  ],
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
+  "scripts": {
+    "dev:app": "npm run start --workspace app --",
+    "dev:server": "npm run dev --workspace server --",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces",
+    "typecheck": "npm run typecheck --workspaces"
+  },
+  "license": "UNLICENSED",
+  "overrides": {
+    "minimatch": "^11.0.4",
+    "glob": "^14.0.3"
+  }
+}
