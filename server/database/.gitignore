@@ -1,0 +1,4 @@
+# Migrations and seeders are version controlled
+# This .gitignore prevents accidental commits of database dumps
+*.sql
+!.gitkeep
