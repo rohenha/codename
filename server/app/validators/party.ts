@@ -1,0 +1,6 @@
+import vine from '@vinejs/vine'
+
+export const createPartyValidator = vine.create({
+  name: vine.string().maxLength(150),
+  themes: vine.array(vine.string()),
+})
