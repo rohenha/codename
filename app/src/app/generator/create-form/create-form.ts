@@ -4,13 +4,15 @@ import { Component, inject, signal } from '@angular/core';
 import { ZardCardComponent, ZardCardHeaderComponent, ZardCardContentComponent } from '@/shared/components/card';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSelectImports } from '@/shared/components/select/select.imports'
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, Validators, ɵInternalFormsSharedModule, ReactiveFormsModule } from '@angular/forms';
 import { delayLoading } from '@/tools/events';
-import { ThemesService } from '@/themes-service';
+import { ThemesService } from '@/themes/themes-service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { PartyService } from '@/party/party-service';
+import { ZardSonnerService } from '@/shared/components/sonner';
 
 @Component({
   selector: 'app-create-form',
@@ -21,6 +23,9 @@ import { of } from 'rxjs';
 export class CreateForm {
   loading = signal<boolean>(false)
   themesService = inject(ThemesService)
+  partyService = inject(PartyService)
+  router = inject(Router)
+  protected readonly sonner = inject(ZardSonnerService);
   options = toSignal(
     this.themesService.getOptions().pipe(
       catchError(() => of([]))
@@ -29,8 +34,7 @@ export class CreateForm {
   )
   form = new FormGroup({
     name: new FormControl('', { validators: [Validators.required]}),
-    players: new FormControl('', { validators: [Validators.required, Validators.min(2)]}),
-    themes: new FormControl('', { validators: [Validators.required]}),
+    themes: new FormControl([], { validators: [Validators.required]}),
   })
 
 
@@ -51,7 +55,15 @@ export class CreateForm {
     delayCancel(() => {
       this.loading.set(false)
     })
-
     console.log(this.form.getRawValue())
+    this.partyService.store(this.form.getRawValue() as { name: string, themes: string[]}).subscribe({
+      next: (party) => {
+        this.sonner.success('The party has been created')
+        this.router.navigateByUrl(`party/${party.uuid}`)
+      },
+      error: (err) => {
+        this.sonner.error(err.message)
+      }
+    })
   }
 }
