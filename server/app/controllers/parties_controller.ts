@@ -77,4 +77,10 @@ export default class PartiesController {
       })
     }
   }
+
+  async find({ params }: HttpContext) {
+    const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
+
+    return party
+  }
 }

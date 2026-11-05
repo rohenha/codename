@@ -16,4 +16,9 @@ export class PartyService {
       return response.party
     }))
   }
+
+  getParty(id: string) {
+    const baseUrl = environment.apiUrl
+    return this.httpClient.get<Party>(`${baseUrl}party/${id}`)
+  }
 }
