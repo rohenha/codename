@@ -7,7 +7,7 @@ import { ZardSelectImports } from '@/shared/components/select/select.imports'
 import { Router, RouterLink } from '@angular/router';
 import { FormControl, FormGroup, Validators, ɵInternalFormsSharedModule, ReactiveFormsModule } from '@angular/forms';
 import { delayLoading } from '@/tools/events';
-import { ThemesService } from '@/themes-service';
+import { ThemesService } from '@/themes/themes-service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
