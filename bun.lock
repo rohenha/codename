@@ -21,6 +21,7 @@
         "@angular/router": "21.2.25",
         "@ng-icons/core": "^34.0.0",
         "@ng-icons/lucide": "^34.0.0",
+        "@types/qrcode": "^1.5.6",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "ngx-sonner": "^3.1.0",
@@ -840,6 +841,8 @@
     "@types/normalize-package-data": ["@types/normalize-package-data@2.4.4", "", {}, "sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA=="],
 
     "@types/pluralize": ["@types/pluralize@0.0.33", "", {}, "sha512-JOqsl+ZoCpP4e8TDke9W79FDcSgPAR0l6pixx2JHkhnRjvShyYiAYw2LVsnA7K08Y6DeOnaU6ujmENO4os/cYg=="],
+
+    "@types/qrcode": ["@types/qrcode@1.5.6", "", { "dependencies": { "@types/node": "*" } }, "sha512-te7NQcV2BOvdj2b1hCAHzAoMNuj65kNBMz0KBaxM6c3VGBOhU0dURQKOtH8CFNI/dsKkwlv32p26qYQTWoB5bw=="],
 
     "@types/superagent": ["@types/superagent@8.1.11", "", { "dependencies": { "@types/cookiejar": "^2.1.5", "@types/methods": "^1.1.4", "@types/node": "*", "form-data": "^4.0.0" } }, "sha512-KA7srSW/HENDtOw9DOqaFLgWuMqN9WgjEw62lh9dpvRaZDkhdOkazASd7X7i2eMUYLHa1U37ZttnePsH5zTDHw=="],
 
