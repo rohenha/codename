@@ -21,6 +21,7 @@
     "#services/*": "./app/services/*.js",
     "#listeners/*": "./app/listeners/*.js",
     "#events/*": "./app/events/*.js",
+    "#themes/*": "./app/themes/*.js",
     "#middleware/*": "./app/middleware/*.js",
     "#validators/*": "./app/validators/*.js",
     "#providers/*": "./providers/*.js",
@@ -53,6 +54,9 @@
   },
   "dependencies": {
     "@adonisjs/core": "^7.6.0",
+    "@adonisjs/lucid": "^22.4.2",
+    "luxon": "^3.7.2",
+    "mysql2": "^3.24.6",
     "reflect-metadata": "^0.2.2"
   },
   "hotHook": {
