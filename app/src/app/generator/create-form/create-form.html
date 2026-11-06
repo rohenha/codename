@@ -10,10 +10,6 @@
           <input z-input id="name" type="text" placeholder="Friends party" formControlName="name" />
         </div>
         <div z-field class="col-span-full">
-          <label z-field-label for="players">Number of players</label>
-          <input z-input id="players" type="number" placeholder="1" formControlName="players"/>
-        </div>
-        <div z-field class="col-span-full">
           <label z-field-label for="themes">Themes</label>
           <z-select zPlaceholder="Themes" [zMultiple]="true" [zMaxLabelCount]="3" formControlName="themes">
             @for (option of options(); track option.id) {

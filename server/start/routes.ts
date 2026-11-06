@@ -16,3 +16,5 @@ router.get('/api/health', async () => ({ status: 'ok' }))
 
 router.get('/api/themes/options', [controllers.Themes, 'options'])
 router.get('/api/party/round', [controllers.Parties, 'roundGeneration'])
+router.post('/api/party', [controllers.Parties, 'store'])
+router.get('/api/party/:partyId', [controllers.Parties, 'find'])

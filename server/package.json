@@ -55,6 +55,8 @@
   "dependencies": {
     "@adonisjs/core": "^7.6.0",
     "@adonisjs/lucid": "^22.4.2",
+    "@types/luxon": "^3.7.6",
+    "@vinejs/vine": "^4.4.0",
     "luxon": "^3.7.2",
     "mysql2": "^3.24.6",
     "reflect-metadata": "^0.2.2"
