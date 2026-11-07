@@ -44,7 +44,7 @@ export class JoinForm {
       const formData = this.form.getRawValue()
       this.partyService.getParty(formData.party_id).subscribe({
         next: (party) => {
-          this.router.navigateByUrl(`join/${party.uuid}`)
+          this.router.navigateByUrl(`party/${party.uuid}/join`)
           delayCancel(() => {
             this.loading.set(false)
           })

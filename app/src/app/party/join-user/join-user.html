@@ -1,0 +1,28 @@
+<main class="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-center gap-6 p-8">
+  <z-card class="w-full md:w-94 mx-auto">
+    @if (loading()) {
+      <z-card-content>
+        <z-spinner></z-spinner>
+      </z-card-content>
+    } @else {
+      <z-card-header>
+        <h3 class="text-4xl cols-span-full">Join {{ party()?.name }} party</h3>
+      </z-card-header>
+      <z-card-content>
+        <form [formGroup]="form" class="grid grid-cols-2 gap-x-2 gap-y-6">
+          <div z-field class="col-span-full">
+            <label z-field-label for="username">Username</label>
+            <input z-input id="username" type="text" placeholder="John" formControlName="username" />
+            @if (errors()['party_id']) {
+              @for (error of errors()['party_id']; track $index) {
+                <p class="text-xs text-red-500">{{ error }}</p>
+              }
+            }
+          </div>
+          <a z-button class="justify-self-start" zSize="lg" zType="outline" routerLink="/">Back</a>
+          <button z-button class="justify-self-end" zSize="lg" [zLoading]="loading()" [zDisabled]="loading()" (click)="onSubmit()">Create my user</button>
+        </form>
+      </z-card-content>
+    }
+  </z-card>
+</main>

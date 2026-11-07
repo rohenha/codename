@@ -21,4 +21,9 @@ export class PartyService {
     const baseUrl = environment.apiUrl
     return this.httpClient.get<Party>(`${baseUrl}party/${id}`)
   }
+
+  addUser(id: string, payload: { username: string}) {
+    const baseUrl = environment.apiUrl
+    return this.httpClient.post<Party>(`${baseUrl}party/${id}/add-user`, payload)
+  }
 }
