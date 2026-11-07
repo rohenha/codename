@@ -7,7 +7,6 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.uuid('uuid').primary().notNullable()
       table.string('name')
-      table.integer('players')
       table.string('themes')
       table.timestamp('created_at')
       table.timestamp('updated_at')

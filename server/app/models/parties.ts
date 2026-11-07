@@ -14,9 +14,6 @@ export default class Parties extends BaseModel {
   @column()
   declare name: string
 
-  @column()
-  declare players: number
-
   @column({
     prepare: (v: string[] | null) => (v && v.length ? v.join(',') : null),
     consume: (v: string | null) => (v ? v.split(',') : []),

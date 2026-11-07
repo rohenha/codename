@@ -8,6 +8,11 @@
         <div z-field class="col-span-full">
           <label z-field-label for="party_id">Party id</label>
           <input z-input id="party_id" type="text" placeholder="DJNKJFHYKIUS" formControlName="party_id" />
+          @if (errors()['party_id']) {
+            @for (error of errors()['party_id']; track $index) {
+              <p class="text-xs text-red-500">{{ error }}</p>
+            }
+          }
         </div>
         <a z-button class="justify-self-start" zSize="lg" zType="outline" routerLink="/">Back</a>
         <button z-button class="justify-self-end" zSize="lg" [zLoading]="loading()" [zDisabled]="loading()" (click)="onSubmit()">Join the party</button>
