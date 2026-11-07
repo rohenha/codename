@@ -17,6 +17,10 @@
             }
           </z-select>
         </div>
+        <div z-field class="col-span-full">
+          <label z-field-label for="username">Username</label>
+          <input z-input id="username" type="text" placeholder="John" formControlName="username" />
+        </div>
         <a z-button class="justify-self-start" zSize="lg" zType="outline" routerLink="/">Back</a>
         <button z-button
         class="justify-self-end" zSize="lg" [zLoading]="loading()" [zDisabled]="loading()" (click)="onSubmit()">Create the party</button>

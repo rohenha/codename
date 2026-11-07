@@ -57,9 +57,41 @@ export default class PartiesController {
           ],
         })
       }
+      try {
+        let userParty = await PartyUsers.create({
+          username: payload.username,
+          partyUuid: party.uuid,
+        })
+        // party.merge({})
+        // party.save()
+      } catch (error) {
+        const dbError = error as {
+          message?: string
+          code?: string
+          errno?: number
+          sqlState?: string
+          sqlMessage?: string
+          sql?: string
+        }
 
+        return response.status(500).send({
+          errors: [
+            {
+              message: 'Unable to create party user',
+              details: {
+                message: dbError.message ?? 'Unknown database error',
+                code: dbError.code ?? null,
+                errno: dbError.errno ?? null,
+                sqlState: dbError.sqlState ?? null,
+                sqlMessage: dbError.sqlMessage ?? null,
+                sql: dbError.sql ?? null,
+              },
+            },
+          ],
+        })
+      }
       return {
-        party,
+        party: party,
         errors: [],
       }
     } catch (error) {
@@ -80,8 +112,7 @@ export default class PartiesController {
   }
 
   async find({ params }: HttpContext) {
-    const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
-
+    const party = await Parties.query().where('uuid', params.partyId).preload('users').firstOrFail()
     return party
   }
 

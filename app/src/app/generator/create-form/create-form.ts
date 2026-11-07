@@ -33,8 +33,9 @@ export class CreateForm {
     { initialValue: [] }
   )
   form = new FormGroup({
-    name: new FormControl('', { validators: [Validators.required]}),
+    name: new FormControl('', { validators: [Validators.required, Validators.maxLength(150)]}),
     themes: new FormControl([], { validators: [Validators.required]}),
+    username: new FormControl('', { validators: [Validators.required, Validators.maxLength(150)]}),
   })
 
 
@@ -56,7 +57,7 @@ export class CreateForm {
       this.loading.set(false)
     })
     console.log(this.form.getRawValue())
-    this.partyService.store(this.form.getRawValue() as { name: string, themes: string[]}).subscribe({
+    this.partyService.store(this.form.getRawValue() as { name: string, themes: string[], username: string}).subscribe({
       next: (party) => {
         this.sonner.success('The party has been created')
         this.router.navigateByUrl(`party/${party.uuid}`)

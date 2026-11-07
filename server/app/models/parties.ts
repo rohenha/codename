@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto'
-import { BaseModel, beforeCreate, column } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
+import PartyUsers from './party_users.ts'
 
 export default class Parties extends BaseModel {
   @beforeCreate()
@@ -26,4 +28,10 @@ export default class Parties extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+
+  @hasMany(() => PartyUsers, {
+    foreignKey: 'partyUuid',
+    onQuery: (query) => query.orderBy('username', 'desc'),
+  })
+  declare users: HasMany<typeof PartyUsers>
 }

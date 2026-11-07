@@ -28,7 +28,7 @@ export class JoinUser {
   party = signal<Party | undefined>(undefined)
 
   form = new FormGroup({
-    username: new FormControl('', { nonNullable: true, validators: [Validators.required]})
+    username: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)]})
   })
 
   constructor() {
