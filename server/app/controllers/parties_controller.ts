@@ -1,9 +1,10 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { themes } from '#themes/themes'
 import { type Theme } from '#themes/theme.model'
-import { createPartyValidator } from '#validators/party'
+import { createPartyValidator, createPartyUserValidator } from '#validators/party'
 import { ValidationError } from '@vinejs/vine'
 import Parties from '#models/parties'
+import PartyUsers from '#models/party_users'
 
 export default class PartiesController {
   async roundGeneration() {
@@ -82,5 +83,64 @@ export default class PartiesController {
     const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
 
     return party
+  }
+
+  async addUser({ params, request, response }: HttpContext) {
+    const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
+
+    try {
+      const payload = await createPartyUserValidator.validate(request.all())
+      let partyUser: PartyUsers
+      try {
+        partyUser = await PartyUsers.create({
+          username: payload.username,
+          partyUuid: party.uuid,
+        })
+      } catch (error) {
+        const dbError = error as {
+          message?: string
+          code?: string
+          errno?: number
+          sqlState?: string
+          sqlMessage?: string
+          sql?: string
+        }
+
+        return response.status(500).send({
+          errors: [
+            {
+              message: 'Unable to create party',
+              details: {
+                message: dbError.message ?? 'Unknown database error',
+                code: dbError.code ?? null,
+                errno: dbError.errno ?? null,
+                sqlState: dbError.sqlState ?? null,
+                sqlMessage: dbError.sqlMessage ?? null,
+                sql: dbError.sql ?? null,
+              },
+            },
+          ],
+        })
+      }
+
+      return {
+        partyUser,
+        errors: [],
+      }
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        return response.status(422).send({
+          errors: error.messages,
+        })
+      }
+
+      return response.status(500).send({
+        errors: [
+          {
+            message: 'Unexpected server error',
+          },
+        ],
+      })
+    }
   }
 }

@@ -4,3 +4,7 @@ export interface Party {
   themes: string[]
 }
 
+export interface PartyUser {
+  uuid: string
+  username: string
+}

@@ -10,6 +10,9 @@ export default class PartyUsers extends BaseModel {
     party.uuid = randomUUID()
   }
 
+  @column({ columnName: 'party_uuid' })
+  declare partyUuid: string
+
   @column({ isPrimary: true })
   declare uuid: string
 
@@ -22,6 +25,9 @@ export default class PartyUsers extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 
-  @belongsTo(() => Parties)
+  @belongsTo(() => Parties, {
+    foreignKey: 'partyUuid',
+    localKey: 'uuid',
+  })
   declare party: BelongsTo<typeof Parties>
 }

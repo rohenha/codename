@@ -69,11 +69,8 @@ export class JoinUser {
       }
       const formData = this.form.getRawValue()
       this.partyService.addUser(party.uuid, formData).subscribe({
-        next: (partyUser) => {
+        next: () => {
           this.router.navigateByUrl(`party/${party.uuid}`)
-          delayCancel(() => {
-            this.loading.set(false)
-          })
         },
         error: () => {
           this.sonner.error('Player wat not added')
