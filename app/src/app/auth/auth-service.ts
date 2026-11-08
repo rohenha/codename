@@ -1,4 +1,4 @@
-import { PartyUser } from '@/party/party.model';
+import { PartyUser } from '@/auth/auth.model';
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../environments/environment';
@@ -14,7 +14,7 @@ export class AuthService {
   loadCurrentUser() {
     const token = this.token()
       if (token) {
-        this.getUser(token).subscribe({
+        this.getUser().subscribe({
           next: (user) => {
             this.currentUser.set(user)
           },
@@ -36,8 +36,8 @@ export class AuthService {
     return token
   }
 
-  getUser(token: string) {
+  getUser() {
     const baseUrl = environment.apiUrl
-    return this.httpClient.get<PartyUser>(`${baseUrl}me`)
+    return this.httpClient.get<PartyUser|undefined>(`${baseUrl}me`)
   }
 }

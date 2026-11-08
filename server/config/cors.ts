@@ -4,7 +4,7 @@ import { defineConfig } from '@adonisjs/cors'
 const corsConfig = defineConfig({
   enabled: (ctx) => ctx.request.url().startsWith('/api'),
 
-  origin: (requestOrigin, ctx) => {
+  origin: () => {
     if (!app.inProduction) {
       return ['http://localhost:4200', 'http://localhost:3000']
     }

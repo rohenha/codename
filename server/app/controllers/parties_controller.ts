@@ -5,6 +5,7 @@ import { createPartyValidator, createPartyUserValidator } from '#validators/part
 import { ValidationError } from '@vinejs/vine'
 import Parties from '#models/parties'
 import PartyUsers from '#models/party_users'
+import db from '@adonisjs/lucid/services/db'
 
 type DatabaseError = {
   message?: string
@@ -34,12 +35,34 @@ export default class PartiesController {
   async store({ request, response }: HttpContext) {
     try {
       const payload = await createPartyValidator.validate(request.all())
-      let party: Parties
+
       try {
-        party = await Parties.create({
-          name: payload.name,
-          themes: payload.themes,
+        // The party and its admin are created together so that a failure
+        // never leaves an orphan party behind.
+        const { party, userParty } = await db.transaction(async (trx) => {
+          const createdParty = new Parties()
+          createdParty.name = payload.name
+          createdParty.themes = payload.themes
+          createdParty.useTransaction(trx)
+          await createdParty.save()
+
+          const createdUser = new PartyUsers()
+          createdUser.username = payload.username
+          createdUser.partyUuid = createdParty.uuid
+          createdUser.useTransaction(trx)
+          await createdUser.save()
+
+          createdParty.adminUuid = createdUser.uuid
+          await createdParty.save()
+
+          return { party: createdParty, userParty: createdUser }
         })
+
+        return {
+          party: party,
+          partyUser: userParty.serialize(),
+          errors: [],
+        }
       } catch (error) {
         const dbError = error as DatabaseError
 
@@ -51,31 +74,6 @@ export default class PartiesController {
             },
           ],
         })
-      }
-      let userParty: PartyUsers
-      try {
-        userParty = await PartyUsers.create({
-          username: payload.username,
-          partyUuid: party.uuid,
-        })
-        party.adminUuid = userParty.uuid
-        await party.save()
-      } catch (error) {
-        const dbError = error as DatabaseError
-
-        return response.status(500).send({
-          errors: [
-            {
-              message: 'Unable to create party user',
-              details: dbError,
-            },
-          ],
-        })
-      }
-      return {
-        party: party,
-        partyUser: userParty.serializeAfterCreation(),
-        errors: [],
       }
     } catch (error) {
       if (error instanceof ValidationError) {
@@ -100,10 +98,20 @@ export default class PartiesController {
   }
 
   async addUser({ params, request, response }: HttpContext) {
-    const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
-
     try {
       const payload = await createPartyUserValidator.validate(request.all())
+      const party = await Parties.find(params.partyId)
+
+      if (!party) {
+        return response.notFound({
+          errors: [
+            {
+              message: 'Party not found',
+            },
+          ],
+        })
+      }
+
       let partyUser: PartyUsers
       try {
         partyUser = await PartyUsers.create({
@@ -116,7 +124,7 @@ export default class PartiesController {
         return response.status(500).send({
           errors: [
             {
-              message: 'Unable to create party',
+              message: 'Unable to create party user',
               details: dbError,
             },
           ],
@@ -124,7 +132,7 @@ export default class PartiesController {
       }
 
       return {
-        partyUser: partyUser.serializeAfterCreation(),
+        partyUser: partyUser.serialize(),
         errors: [],
       }
     } catch (error) {
