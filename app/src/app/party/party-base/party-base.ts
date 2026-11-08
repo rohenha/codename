@@ -6,10 +6,12 @@ import { ZardSpinnerComponent } from '@/shared/components/spinner';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import QRCode from 'qrcode'
 import { ZardButtonComponent } from '@/shared/components/button';
+import { ZardSonnerService } from '@/shared/components/sonner';
+import { ZardBadgeComponent } from '@/shared/components/badge';
 
 @Component({
   selector: 'app-party-base',
-  imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink],
+  imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink, ZardBadgeComponent],
   templateUrl: './party-base.html',
   styleUrl: './party-base.css',
 })
@@ -20,6 +22,7 @@ export class PartyBase {
   party = signal<Party | undefined>(undefined)
   router = inject(Router)
   loading = signal(true)
+  protected readonly sonner = inject(ZardSonnerService)
   qrcode = signal<SafeHtml | null>('')
   constructor() {
     effect(() => {
@@ -33,6 +36,7 @@ export class PartyBase {
             this.qrcode.set(qrcodeSanitized)
           },
           error: () => {
+            this.sonner.error('Party does not exist')
             this.router.navigateByUrl('')
           },
         })

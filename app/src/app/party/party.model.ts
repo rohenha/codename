@@ -3,9 +3,13 @@ export interface Party {
   name: string
   themes: string[]
   users: PartyUser[]
+  adminUuid: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export interface PartyUser {
   uuid: string
   username: string
+  plainToken?: string
 }

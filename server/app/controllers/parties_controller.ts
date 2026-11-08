@@ -6,6 +6,15 @@ import { ValidationError } from '@vinejs/vine'
 import Parties from '#models/parties'
 import PartyUsers from '#models/party_users'
 
+type DatabaseError = {
+  message?: string
+  code?: string
+  errno?: number
+  sqlState?: string
+  sqlMessage?: string
+  sql?: string
+}
+
 export default class PartiesController {
   async roundGeneration() {
     const fromThemes = ['cinema', 'sport', 'history']
@@ -32,66 +41,40 @@ export default class PartiesController {
           themes: payload.themes,
         })
       } catch (error) {
-        const dbError = error as {
-          message?: string
-          code?: string
-          errno?: number
-          sqlState?: string
-          sqlMessage?: string
-          sql?: string
-        }
+        const dbError = error as DatabaseError
 
         return response.status(500).send({
           errors: [
             {
               message: 'Unable to create party',
-              details: {
-                message: dbError.message ?? 'Unknown database error',
-                code: dbError.code ?? null,
-                errno: dbError.errno ?? null,
-                sqlState: dbError.sqlState ?? null,
-                sqlMessage: dbError.sqlMessage ?? null,
-                sql: dbError.sql ?? null,
-              },
+              details: dbError,
             },
           ],
         })
       }
+      let userParty: PartyUsers
       try {
-        let userParty = await PartyUsers.create({
+        userParty = await PartyUsers.create({
           username: payload.username,
           partyUuid: party.uuid,
         })
-        // party.merge({})
-        // party.save()
+        party.adminUuid = userParty.uuid
+        await party.save()
       } catch (error) {
-        const dbError = error as {
-          message?: string
-          code?: string
-          errno?: number
-          sqlState?: string
-          sqlMessage?: string
-          sql?: string
-        }
+        const dbError = error as DatabaseError
 
         return response.status(500).send({
           errors: [
             {
               message: 'Unable to create party user',
-              details: {
-                message: dbError.message ?? 'Unknown database error',
-                code: dbError.code ?? null,
-                errno: dbError.errno ?? null,
-                sqlState: dbError.sqlState ?? null,
-                sqlMessage: dbError.sqlMessage ?? null,
-                sql: dbError.sql ?? null,
-              },
+              details: dbError,
             },
           ],
         })
       }
       return {
         party: party,
+        partyUser: userParty.serializeAfterCreation(),
         errors: [],
       }
     } catch (error) {
@@ -128,34 +111,20 @@ export default class PartiesController {
           partyUuid: party.uuid,
         })
       } catch (error) {
-        const dbError = error as {
-          message?: string
-          code?: string
-          errno?: number
-          sqlState?: string
-          sqlMessage?: string
-          sql?: string
-        }
+        const dbError = error as DatabaseError
 
         return response.status(500).send({
           errors: [
             {
               message: 'Unable to create party',
-              details: {
-                message: dbError.message ?? 'Unknown database error',
-                code: dbError.code ?? null,
-                errno: dbError.errno ?? null,
-                sqlState: dbError.sqlState ?? null,
-                sqlMessage: dbError.sqlMessage ?? null,
-                sql: dbError.sql ?? null,
-              },
+              details: dbError,
             },
           ],
         })
       }
 
       return {
-        partyUser,
+        partyUser: partyUser.serializeAfterCreation(),
         errors: [],
       }
     } catch (error) {

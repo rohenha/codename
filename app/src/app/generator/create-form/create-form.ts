@@ -13,6 +13,7 @@ import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { PartyService } from '@/party/party-service';
 import { ZardSonnerService } from '@/shared/components/sonner';
+import { AuthService } from '@/auth/auth-service';
 
 @Component({
   selector: 'app-create-form',
@@ -25,6 +26,7 @@ export class CreateForm {
   themesService = inject(ThemesService)
   partyService = inject(PartyService)
   router = inject(Router)
+  authService = inject(AuthService)
   protected readonly sonner = inject(ZardSonnerService);
   options = toSignal(
     this.themesService.getOptions().pipe(
@@ -58,9 +60,12 @@ export class CreateForm {
     })
     console.log(this.form.getRawValue())
     this.partyService.store(this.form.getRawValue() as { name: string, themes: string[], username: string}).subscribe({
-      next: (party) => {
+      next: (data) => {
+        if (data.partyUser.plainToken) {
+          this.authService.storeToken(data.partyUser.plainToken)
+        }
         this.sonner.success('The party has been created')
-        this.router.navigateByUrl(`party/${party.uuid}`)
+        this.router.navigateByUrl(`party/${data.party.uuid}`)
       },
       error: (err) => {
         this.sonner.error(err.message)

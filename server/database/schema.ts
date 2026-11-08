@@ -8,8 +8,10 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class PartySchema extends BaseModel {
-  static $columns = ['createdAt', 'name', 'themes', 'updatedAt', 'uuid'] as const
+  static $columns = ['adminUuid', 'createdAt', 'name', 'themes', 'updatedAt', 'uuid'] as const
   $columns = PartySchema.$columns
+  @column()
+  declare adminUuid: string | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
@@ -23,12 +25,14 @@ export class PartySchema extends BaseModel {
 }
 
 export class PartyUserSchema extends BaseModel {
-  static $columns = ['createdAt', 'partyUuid', 'updatedAt', 'username', 'uuid'] as const
+  static $columns = ['createdAt', 'partyUuid', 'token', 'updatedAt', 'username', 'uuid'] as const
   $columns = PartyUserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare partyUuid: string
+  @column()
+  declare token: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

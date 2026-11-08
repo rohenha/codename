@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import { BaseModel, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import { BaseModel, beforeCreate, belongsTo, column, hasMany } from '@adonisjs/lucid/orm'
+import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import PartyUsers from './party_users.ts'
 
@@ -15,6 +15,9 @@ export default class Parties extends BaseModel {
 
   @column()
   declare name: string
+
+  @column({ columnName: 'admin_uuid' })
+  declare adminUuid: string | null
 
   @column({
     prepare: (v: string[] | null) => (v && v.length ? v.join(',') : null),
@@ -34,4 +37,9 @@ export default class Parties extends BaseModel {
     onQuery: (query) => query.orderBy('username', 'desc'),
   })
   declare users: HasMany<typeof PartyUsers>
+
+  @belongsTo(() => PartyUsers, {
+    foreignKey: 'adminUuid',
+  })
+  declare admin: BelongsTo<typeof PartyUsers>
 }

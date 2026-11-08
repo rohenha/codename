@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { Party } from './party.model';
+import { Party, PartyUser } from './party.model';
 import { map } from 'rxjs';
 
 @Injectable({
@@ -12,8 +12,11 @@ export class PartyService {
 
   store(payload: { name: string, themes: string[] }) {
     const baseUrl = environment.apiUrl
-    return this.httpClient.post<{ party: Party}>(`${baseUrl}party`, payload).pipe(map(( response) => {
-      return response.party
+    return this.httpClient.post<{ party: Party, partyUser: PartyUser}>(`${baseUrl}party`, payload).pipe(map((response) => {
+      return {
+        party: response.party,
+        partyUser: response.partyUser
+      }
     }))
   }
 
