@@ -4,7 +4,7 @@ import type PartyUsers from '#models/party_users'
 declare module '@adonisjs/core/http' {
   interface HttpContext {
     /**
-     * Set by the partyAuth middleware once the player token has been verified.
+     * Set by the partyAuth middleware once the access cookie has been verified.
      */
     partyUser?: PartyUsers
 

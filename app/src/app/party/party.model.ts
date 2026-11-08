@@ -11,5 +11,4 @@ export interface Party {
 export interface PartyUser {
   uuid: string
   username: string
-  plainToken?: string
 }

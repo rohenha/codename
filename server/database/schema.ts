@@ -25,14 +25,20 @@ export class PartySchema extends BaseModel {
 }
 
 export class PartyUserSchema extends BaseModel {
-  static $columns = ['createdAt', 'partyUuid', 'token', 'updatedAt', 'username', 'uuid'] as const
+  static $columns = ['createdAt', 'partyUuid', 'refreshToken', 'refreshTokenExpiresAt', 'token', 'tokenExpiresAt', 'updatedAt', 'username', 'uuid'] as const
   $columns = PartyUserSchema.$columns
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare partyUuid: string
   @column()
+  declare refreshToken: string | null
+  @column.dateTime()
+  declare refreshTokenExpiresAt: DateTime | null
+  @column()
   declare token: string
+  @column.dateTime()
+  declare tokenExpiresAt: DateTime | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
   @column()

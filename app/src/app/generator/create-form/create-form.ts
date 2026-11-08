@@ -37,13 +37,17 @@ export class CreateForm {
   form = new FormGroup({
     name: new FormControl('', { validators: [Validators.required, Validators.maxLength(150)]}),
     themes: new FormControl([], { validators: [Validators.required]}),
-    username: new FormControl('', { validators: [Validators.required, Validators.maxLength(150)]}),
+    username: new FormControl({
+      value: this.authService.currentUser() ? this.authService.currentUser()?.username : '',
+      disabled: this.authService.currentUser() !== undefined
+    }, {
+      validators: [Validators.required, Validators.maxLength(150)]
+    }),
   })
 
 
   onSubmit() {
     const delayCancel = delayLoading(() => {
-      console.log('set animation')
       this.loading.set(true)
       return () => void 0
     }, 100)
@@ -58,12 +62,9 @@ export class CreateForm {
     delayCancel(() => {
       this.loading.set(false)
     })
-    console.log(this.form.getRawValue())
     this.partyService.store(this.form.getRawValue() as { name: string, themes: string[], username: string}).subscribe({
       next: (data) => {
-        if (data.partyUser.plainToken) {
-          this.authService.storeToken(data.partyUser.plainToken)
-        }
+        this.authService.currentUser.set({ ...data.partyUser, parties: [data.party] })
         this.sonner.success('The party has been created')
         this.router.navigateByUrl(`party/${data.party.uuid}`)
       },

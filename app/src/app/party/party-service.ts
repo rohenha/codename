@@ -10,7 +10,7 @@ import { map } from 'rxjs';
 export class PartyService {
   httpClient = inject(HttpClient)
 
-  store(payload: { name: string, themes: string[] }) {
+  store(payload: { name: string, themes: string[], username: string }) {
     const baseUrl = environment.apiUrl
     return this.httpClient.post<{ party: Party, partyUser: PartyUser}>(`${baseUrl}party`, payload).pipe(map((response) => {
       return {
@@ -27,6 +27,8 @@ export class PartyService {
 
   addUser(id: string, payload: { username: string}) {
     const baseUrl = environment.apiUrl
-    return this.httpClient.post<Party>(`${baseUrl}party/${id}/add-user`, payload)
+    return this.httpClient.post<{ partyUser: PartyUser }>(`${baseUrl}party/${id}/add-user`, payload).pipe(
+      map((response) => response.partyUser)
+    )
   }
 }

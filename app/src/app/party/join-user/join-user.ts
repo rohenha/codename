@@ -12,6 +12,7 @@ import { ZardSonnerService } from '@/shared/components/sonner';
 import { ZardSpinnerComponent } from '@/shared/components/spinner';
 import { getErrors } from '@/tools/form';
 import { Party } from '@/party/party.model';
+import { AuthService } from '@/auth/auth-service';
 @Component({
   selector: 'app-join-form',
   imports: [ZardSpinnerComponent, ZardInputComponent, ZardFieldImports, ZardCardComponent, ZardCardHeaderComponent, ZardCardContentComponent, ZardButtonComponent, ZardSelectImports, RouterLink, ReactiveFormsModule],
@@ -24,11 +25,19 @@ export class JoinUser {
   router = inject(Router)
   protected readonly sonner = inject(ZardSonnerService)
   partyService = inject(PartyService)
+  authService = inject(AuthService)
   errors = signal<Record<string, string[]>>({})
   party = signal<Party | undefined>(undefined)
 
   form = new FormGroup({
-    username: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)]})
+    // username: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)]})
+    username: new FormControl({
+      value: this.authService.currentUser()?.username ?? '',
+      disabled: this.authService.currentUser() !== undefined
+    }, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.maxLength(150)]
+    }),
   })
 
   constructor() {
@@ -60,7 +69,7 @@ export class JoinUser {
       }, 100)
       if (this.form.invalid) {
         this.form.markAllAsDirty()
-        const errors = getErrors<{ username: FormControl<string> }>(this.form.controls)
+        const errors = getErrors(this.form.controls)
         this.errors.set(errors)
         delayCancel(() => {
           this.loading.set(false)
@@ -69,7 +78,8 @@ export class JoinUser {
       }
       const formData = this.form.getRawValue()
       this.partyService.addUser(party.uuid, formData).subscribe({
-        next: () => {
+        next: (partyUser) => {
+          this.authService.currentUser.set({ ...partyUser, parties: [party] })
           this.router.navigateByUrl(`party/${party.uuid}`)
         },
         error: () => {

@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuardGuard } from '@/auth/auth-guard-guard';
+import { authGuardGuard } from '@/auth/auth-guard';
 
 export const routes: Routes = [
   { path: '', loadComponent: () => import('@/landing/landing').then((m) => m.Landing) },

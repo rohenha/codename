@@ -16,6 +16,8 @@ router.get('/', async () => ({ name: 'codename-api' }))
 router.get('/api/health', async () => ({ status: 'ok' }))
 
 router.get('/api/themes/options', [controllers.Themes, 'options'])
+router.post('/api/auth/refresh', [controllers.PartyUsers, 'refresh'])
+router.post('/api/auth/logout', [controllers.PartyUsers, 'logout'])
 router.post('/api/party', [controllers.Parties, 'store'])
 router.get('/api/party/:partyId', [controllers.Parties, 'find'])
 router.post('/api/party/:partyId/add-user', [controllers.Parties, 'addUser'])

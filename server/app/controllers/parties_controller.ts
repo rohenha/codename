@@ -6,6 +6,7 @@ import { ValidationError } from '@vinejs/vine'
 import Parties from '#models/parties'
 import PartyUsers from '#models/party_users'
 import db from '@adonisjs/lucid/services/db'
+import { setSessionCookies } from '#services/party_session'
 
 type DatabaseError = {
   message?: string
@@ -32,31 +33,47 @@ export default class PartiesController {
     }
   }
 
-  async store({ request, response }: HttpContext) {
+  async store({ request, response, partyUser }: HttpContext) {
     try {
       const payload = await createPartyValidator.validate(request.all())
 
       try {
         // The party and its admin are created together so that a failure
         // never leaves an orphan party behind.
-        const { party, userParty } = await db.transaction(async (trx) => {
+        const { party, userParty, tokens } = await db.transaction(async (trx) => {
           const createdParty = new Parties()
           createdParty.name = payload.name
           createdParty.themes = payload.themes
           createdParty.useTransaction(trx)
           await createdParty.save()
 
+          if (partyUser) {
+            createdParty.adminUuid = partyUser.uuid
+            await createdParty.save()
+
+            partyUser.useTransaction(trx)
+            const sessionTokens = partyUser.issueSession()
+            await partyUser.save()
+
+            return { party: createdParty, userParty: partyUser, tokens: sessionTokens }
+          }
+
           const createdUser = new PartyUsers()
           createdUser.username = payload.username
           createdUser.partyUuid = createdParty.uuid
           createdUser.useTransaction(trx)
+          const sessionTokens = createdUser.issueSession()
           await createdUser.save()
 
           createdParty.adminUuid = createdUser.uuid
           await createdParty.save()
 
-          return { party: createdParty, userParty: createdUser }
+          return { party: createdParty, userParty: createdUser, tokens: sessionTokens }
         })
+
+        // Tokens are only sent as HttpOnly cookies, never in the JSON body.
+        setSessionCookies(response, tokens)
+        userParty.$preloaded.parties = [party]
 
         return {
           party: party,
@@ -97,7 +114,7 @@ export default class PartiesController {
     return party
   }
 
-  async addUser({ params, request, response }: HttpContext) {
+  async addUser({ params, request, response, partyUser }: HttpContext) {
     try {
       const payload = await createPartyUserValidator.validate(request.all())
       const party = await Parties.find(params.partyId)
@@ -112,12 +129,26 @@ export default class PartiesController {
         })
       }
 
-      let partyUser: PartyUsers
+      if (partyUser) {
+        partyUser.partyUuid = party.uuid
+        const tokens = partyUser.issueSession()
+        await partyUser.save()
+        setSessionCookies(response, tokens)
+        partyUser.$preloaded.parties = [party]
+
+        return {
+          partyUser: partyUser.serialize(),
+          errors: [],
+        }
+      }
+
+      const createdUse = new PartyUsers()
+      createdUse.username = payload.username
+      createdUse.partyUuid = party.uuid
+      const tokens = createdUse.issueSession()
+
       try {
-        partyUser = await PartyUsers.create({
-          username: payload.username,
-          partyUuid: party.uuid,
-        })
+        await createdUse.save()
       } catch (error) {
         const dbError = error as DatabaseError
 
@@ -131,8 +162,11 @@ export default class PartiesController {
         })
       }
 
+      setSessionCookies(response, tokens)
+      createdUse.$preloaded.parties = [party]
+
       return {
-        partyUser: partyUser.serialize(),
+        partyUser: createdUse.serialize(),
         errors: [],
       }
     } catch (error) {
