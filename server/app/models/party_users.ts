@@ -1,7 +1,7 @@
 import { randomUUID, randomBytes, createHash } from 'node:crypto'
-import { BaseModel, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
-import type { HasMany } from '@adonisjs/lucid/types/relations'
+import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Parties from '#models/parties'
 import {
   ACCESS_TOKEN_TTL_MINUTES,
@@ -39,9 +39,6 @@ export default class PartyUsers extends BaseModel {
       .first()
   }
 
-  @column({ columnName: 'party_uuid' })
-  declare partyUuid: string
-
   @column({ isPrimary: true })
   declare uuid: string
 
@@ -66,11 +63,12 @@ export default class PartyUsers extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
 
-  @hasMany(() => Parties, {
-    foreignKey: 'uuid',
-    localKey: 'partyUuid',
+  @manyToMany(() => Parties, {
+    pivotTable: 'party_members',
+    pivotForeignKey: 'party_user_uuid',
+    pivotRelatedForeignKey: 'party_uuid',
   })
-  declare parties: HasMany<typeof Parties>
+  declare parties: ManyToMany<typeof Parties>
 
   /**
    * Rotates the access and refresh tokens.

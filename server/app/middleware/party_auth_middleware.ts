@@ -29,7 +29,9 @@ export default class PartyAuthMiddleware {
     }
 
     const partyId = ctx.params.partyId
-    if (partyId && partyId !== partyUser.partyUuid) {
+    const isMember = !partyId || partyUser.parties.some((party) => party.uuid === partyId)
+
+    if (!isMember) {
       ctx.response.forbidden({
         errors: [{ message: 'You are not allowed to access this party' }],
       })

@@ -39,5 +39,6 @@ router.use([() => import('@adonisjs/core/bodyparser_middleware')])
  */
 export const middleware = router.named({
   partyAuth: () => import('#middleware/party_auth_middleware'),
+  partyOptionalAuth: () => import('#middleware/party_optional_auth_middleware'),
   partyAdmin: () => import('#middleware/party_admin_middleware'),
 })

@@ -18,9 +18,13 @@ router.get('/api/health', async () => ({ status: 'ok' }))
 router.get('/api/themes/options', [controllers.Themes, 'options'])
 router.post('/api/auth/refresh', [controllers.PartyUsers, 'refresh'])
 router.post('/api/auth/logout', [controllers.PartyUsers, 'logout'])
-router.post('/api/party', [controllers.Parties, 'store'])
+router
+  .post('/api/party', [controllers.Parties, 'store'])
+  .use(middleware.partyOptionalAuth())
 router.get('/api/party/:partyId', [controllers.Parties, 'find'])
-router.post('/api/party/:partyId/add-user', [controllers.Parties, 'addUser'])
+router
+  .post('/api/party/:partyId/add-user', [controllers.Parties, 'addUser'])
+  .use(middleware.partyOptionalAuth())
 
 /**
  * Routes requiring an authenticated party player.

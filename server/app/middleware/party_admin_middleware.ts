@@ -9,7 +9,10 @@ import type { NextFn } from '@adonisjs/core/types/http'
 export default class PartyAdminMiddleware {
   async handle(ctx: HttpContext, next: NextFn) {
     const partyUser = ctx.partyUser
-    const party = ctx.parties?.[0]
+    const partyId = ctx.params.partyId
+    const party = partyId
+      ? ctx.parties?.find((currentParty) => currentParty.uuid === partyId)
+      : ctx.parties?.[0]
 
     if (!partyUser || !party) {
       ctx.response.unauthorized({ errors: [{ message: 'Unauthenticated' }] })

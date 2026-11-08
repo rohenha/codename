@@ -54,16 +54,23 @@ export default class PartiesController {
             partyUser.useTransaction(trx)
             const sessionTokens = partyUser.issueSession()
             await partyUser.save()
+            await trx.insertQuery().table('party_members').insert({
+              party_uuid: createdParty.uuid,
+              party_user_uuid: partyUser.uuid,
+            })
 
             return { party: createdParty, userParty: partyUser, tokens: sessionTokens }
           }
 
           const createdUser = new PartyUsers()
           createdUser.username = payload.username
-          createdUser.partyUuid = createdParty.uuid
           createdUser.useTransaction(trx)
           const sessionTokens = createdUser.issueSession()
           await createdUser.save()
+          await trx.insertQuery().table('party_members').insert({
+            party_uuid: createdParty.uuid,
+            party_user_uuid: createdUser.uuid,
+          })
 
           createdParty.adminUuid = createdUser.uuid
           await createdParty.save()
@@ -73,11 +80,14 @@ export default class PartiesController {
 
         // Tokens are only sent as HttpOnly cookies, never in the JSON body.
         setSessionCookies(response, tokens)
-        userParty.$preloaded.parties = [party]
+        const sessionUser = await PartyUsers.query()
+          .where('uuid', userParty.uuid)
+          .preload('parties')
+          .firstOrFail()
 
         return {
           party: party,
-          partyUser: userParty.serialize(),
+          partyUser: sessionUser.serialize(),
           errors: [],
         }
       } catch (error) {
@@ -129,45 +139,62 @@ export default class PartiesController {
         })
       }
 
-      if (partyUser) {
-        partyUser.partyUuid = party.uuid
-        const tokens = partyUser.issueSession()
-        await partyUser.save()
+      try {
+        const { sessionUser, tokens } = await db.transaction(async (trx) => {
+          if (partyUser) {
+            partyUser.useTransaction(trx)
+            const sessionTokens = partyUser.issueSession()
+            await partyUser.save()
+
+            const isAlreadyMember = partyUser.parties.some(
+              (memberParty) => memberParty.uuid === party.uuid
+            )
+
+            if (!isAlreadyMember) {
+              await trx.insertQuery().table('party_members').insert({
+                party_uuid: party.uuid,
+                party_user_uuid: partyUser.uuid,
+              })
+            }
+
+            return { sessionUser: partyUser, tokens: sessionTokens }
+          }
+
+          const createdUser = new PartyUsers()
+          createdUser.username = payload.username
+          createdUser.useTransaction(trx)
+          const sessionTokens = createdUser.issueSession()
+          await createdUser.save()
+          await trx.insertQuery().table('party_members').insert({
+            party_uuid: party.uuid,
+            party_user_uuid: createdUser.uuid,
+          })
+
+          return { sessionUser: createdUser, tokens: sessionTokens }
+        })
+
         setSessionCookies(response, tokens)
-        partyUser.$preloaded.parties = [party]
+
+        const refreshedUser = await PartyUsers.query()
+          .where('uuid', sessionUser.uuid)
+          .preload('parties')
+          .firstOrFail()
 
         return {
-          partyUser: partyUser.serialize(),
+          partyUser: refreshedUser.serialize(),
           errors: [],
         }
-      }
-
-      const createdUse = new PartyUsers()
-      createdUse.username = payload.username
-      createdUse.partyUuid = party.uuid
-      const tokens = createdUse.issueSession()
-
-      try {
-        await createdUse.save()
       } catch (error) {
         const dbError = error as DatabaseError
 
         return response.status(500).send({
           errors: [
             {
-              message: 'Unable to create party user',
+              message: 'Unable to add party user',
               details: dbError,
             },
           ],
         })
-      }
-
-      setSessionCookies(response, tokens)
-      createdUse.$preloaded.parties = [party]
-
-      return {
-        partyUser: createdUse.serialize(),
-        errors: [],
       }
     } catch (error) {
       if (error instanceof ValidationError) {

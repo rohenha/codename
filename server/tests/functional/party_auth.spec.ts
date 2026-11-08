@@ -12,7 +12,7 @@ type CreatedParty = {
   }
   partyUser: {
     uuid: string
-    partyUuid: string
+    username: string
     parties: Array<{ uuid: string }>
   }
 }
@@ -82,6 +82,70 @@ test.group('Party auth', (group) => {
     assert.equal(storedUser.refreshToken, PartyUsers.hashToken(refresh!.value))
   })
 
+  test('store reuses the authenticated player instead of creating a new one', async ({
+    client,
+    assert,
+  }) => {
+    const first = await createParty(client, 'Party A', 'admin')
+
+    const response = await client
+      .post('/api/party')
+      .plainCookie(ACCESS_COOKIE, first.accessToken)
+      .json({
+        name: 'Party B',
+        username: 'ignored',
+        themes: ['sport'],
+      })
+
+    response.assertStatus(200)
+
+    const body = response.body() as CreatedParty
+    const access = response.cookie(ACCESS_COOKIE)!.value
+
+    assert.equal(body.partyUser.uuid, first.body.partyUser.uuid)
+    assert.equal(body.partyUser.username, 'admin')
+    assert.equal(body.party.adminUuid, first.body.partyUser.uuid)
+    assert.lengthOf(body.partyUser.parties, 2)
+    assert.includeMembers(
+      body.partyUser.parties.map((party) => party.uuid),
+      [first.body.party.uuid, body.party.uuid]
+    )
+    assert.isNull(await PartyUsers.query().where('username', 'ignored').first())
+
+    const me = await client.get('/api/me').plainCookie(ACCESS_COOKIE, access)
+    me.assertStatus(200)
+
+    const meBody = me.body() as { parties: Array<{ uuid: string }> }
+    assert.lengthOf(meBody.parties, 2)
+    assert.includeMembers(
+      meBody.parties.map((party) => party.uuid),
+      [first.body.party.uuid, body.party.uuid]
+    )
+  })
+
+  test('store asks for a refresh when the access cookie is expired', async ({
+    client,
+    assert,
+  }) => {
+    const first = await createParty(client, 'Party A', 'admin')
+    const storedUser = await PartyUsers.findOrFail(first.body.partyUser.uuid)
+    storedUser.tokenExpiresAt = DateTime.now().minus({ minutes: 1 })
+    await storedUser.save()
+
+    const response = await client
+      .post('/api/party')
+      .plainCookie(ACCESS_COOKIE, first.accessToken)
+      .plainCookie(REFRESH_COOKIE, first.refreshToken)
+      .json({
+        name: 'Party B',
+        username: 'ignored',
+        themes: ['sport'],
+      })
+
+    response.assertStatus(401)
+    assert.isNull(await PartyUsers.query().where('username', 'ignored').first())
+  })
+
   test('addUser returns a session for the new player', async ({ client, assert }) => {
     const { body: admin } = await createParty(client, 'My party', 'admin')
 
@@ -94,13 +158,38 @@ test.group('Party auth', (group) => {
     const access = response.cookie(ACCESS_COOKIE)
 
     assert.isDefined(access)
-    assert.equal(body.partyUser.partyUuid, admin.party.uuid)
     assert.isArray(body.partyUser.parties)
     assert.lengthOf(body.partyUser.parties, 1)
     assert.equal(body.partyUser.parties[0].uuid, admin.party.uuid)
 
     const storedUser = await PartyUsers.findOrFail(body.partyUser.uuid)
     assert.equal(storedUser.token, PartyUsers.hashToken(access!.value))
+  })
+
+  test('addUser reuses the authenticated player when joining another party', async ({
+    client,
+    assert,
+  }) => {
+    const first = await createParty(client, 'Party A', 'admin')
+    const second = await createParty(client, 'Party B', 'admin-b')
+
+    const response = await client
+      .post(`/api/party/${second.body.party.uuid}/add-user`)
+      .plainCookie(ACCESS_COOKIE, first.accessToken)
+      .json({ username: 'ignored' })
+
+    response.assertStatus(200)
+
+    const body = response.body() as { partyUser: CreatedParty['partyUser'] }
+
+    assert.equal(body.partyUser.uuid, first.body.partyUser.uuid)
+    assert.equal(body.partyUser.username, 'admin')
+    assert.lengthOf(body.partyUser.parties, 2)
+    assert.includeMembers(
+      body.partyUser.parties.map((party) => party.uuid),
+      [first.body.party.uuid, second.body.party.uuid]
+    )
+    assert.isNull(await PartyUsers.query().where('username', 'ignored').first())
   })
 
   test('addUser returns a 404 for an unknown party', async ({ client }) => {
