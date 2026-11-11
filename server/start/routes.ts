@@ -35,8 +35,12 @@ router
     router
       .group(() => {
         router.post('', [controllers.Parties, 'store'])
-        router.get(':partyId', [controllers.Parties, 'show'])
+        router.get(':partyId', [controllers.Parties, 'show']).use(middleware.party())
         router.get(':partyId/join', [controllers.Parties, 'join'])
+        router.post(':partyId/add-user', [controllers.Parties, 'addUser'])
+        router
+          .post(':partyId/remove-user', [controllers.Parties, 'removeUser'])
+          .use(middleware.adminParty())
       })
       .prefix('party')
       .as('party')

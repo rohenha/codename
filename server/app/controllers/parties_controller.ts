@@ -2,7 +2,11 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { themes } from '#themes/themes'
 import { type Theme } from '#themes/theme.model'
 import Parties from '#models/parties'
-import { createPartyValidator, addUserPartyValidator } from '#validators/party'
+import {
+  createPartyValidator,
+  addUserPartyValidator,
+  removeUserPartyValidator,
+} from '#validators/party'
 import PartyTransformer from '#transformers/party_transformer'
 import encryption from '@adonisjs/core/services/encryption'
 
@@ -33,25 +37,7 @@ export default class PartiesController {
     })
   }
 
-  async show({ params, auth, serialize, response }: HttpContext) {
-    const user = await auth.getUserOrFail()
-    const party = await Parties.query()
-      .where('uuid', params.partyId)
-      .preload('users')
-      .preload('admin')
-      .firstOrFail()
-
-    const existsUserInParty = party.users.find((partyUser) => user.id === partyUser.id)
-
-    if (!existsUserInParty) {
-      return response.status(403).json({
-        error: {
-          code: 'PARTY_ACCESS_DENIED',
-          message: 'Vous ne faites pas partie de cette party',
-        },
-      })
-    }
-
+  async show({ serialize, response, party, user }: HttpContext) {
     const partyResponse = await serialize({
       party: PartyTransformer.transform(party),
     })
@@ -84,14 +70,54 @@ export default class PartiesController {
   }
 
   async addUser({ params, auth, serialize, request, response }: HttpContext) {
-    const user = await auth.getUserOrFail()
-    const party = await Parties.query()
-      .where('uuid', params.partyId)
-      .preload('users')
-      .preload('admin')
-      .firstOrFail()
-    const payload = await request.validateUsing(addUserPartyValidator)
+    const { password } = await request.validateUsing(addUserPartyValidator)
 
-    // if ()
+    const user = await auth.getUserOrFail()
+    const party = await Parties.query().where('uuid', params.partyId).preload('users').firstOrFail()
+
+    const existsUserInParty = party.users.find((partyUser) => user.id === partyUser.id)
+    const decryptedPassword = (await encryption.decrypt(party.password)) as string
+
+    if (decryptedPassword !== password) {
+      return response.status(403).json({
+        error: {
+          code: 'PARTY_ACCESS_DENIED',
+          message: 'incorrect password',
+        },
+      })
+    }
+
+    if (existsUserInParty) {
+      return response.status(403).json({
+        error: {
+          code: 'PARTY_ACCESS_DENIED',
+          message: 'User already exists in party',
+        },
+      })
+    }
+
+    await party.related('users').attach([user.id])
+
+    return serialize({
+      party: PartyTransformer.transform(party),
+    })
+  }
+
+  async removeUser({ response, serialize, request, party }: HttpContext) {
+    const { userId } = await request.validateUsing(removeUserPartyValidator)
+    try {
+      await party.related('users').detach([userId])
+      await party.load('users')
+      return serialize({
+        party: PartyTransformer.transform(party),
+      })
+    } catch (e) {
+      return response.status(500).json({
+        error: {
+          code: 'PARTY_ACCESS_DENIED',
+          message: 'Error when trying to detach user',
+        },
+      })
+    }
   }
 }

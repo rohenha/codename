@@ -83,8 +83,8 @@ export class JoinUser {
           this.router.navigateByUrl(`party/${party.uuid}`)
         },
         error: () => {
-          this.sonner.error('Player wat not added')
-          this.errors.set({ party_id: ['Player wat not added'] })
+          this.sonner.error('Player was not added')
+          this.errors.set({ party_id: ['Player was not added'] })
           delayCancel(() => {
             this.loading.set(false)
           })

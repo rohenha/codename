@@ -8,3 +8,7 @@ export const createPartyValidator = vine.create({
 export const addUserPartyValidator = vine.create({
   password: vine.string().minLength(8).maxLength(8),
 })
+
+export const removeUserPartyValidator = vine.create({
+  userId: vine.number(),
+})
