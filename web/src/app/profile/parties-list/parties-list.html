@@ -1,5 +1,8 @@
 <div class="grid gap-2 w-full mt-6">
-  <h2 class="text-2xl font-semibold mb-2">My parties</h2>
+  <header class="flex items-center justify-between gap-2">
+    <h2 class="text-2xl font-semibold mb-2">My parties</h2>
+    <a z-button routerLink="/party/create">Create party</a>
+  </header>
     @if (parties().length > 0) {
       @for (party of parties(); track party.uuid) {
         <div class="flex justify-between items-center gap-3 py-4 px-4 rounded-xl border-accent border">
