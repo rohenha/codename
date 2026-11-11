@@ -1,32 +1,53 @@
 
-<main class="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-center gap-6 p-8">
+<main class="mx-auto flex max-w-5xl flex-col items-start justify-center gap-6 py-16 px-8">
   @if (loading()) {
     <p class="flex items-center gap-4 ">Chargement <z-spinner class="size-6"/></p>
   } @else {
-    <h1 class="text-4xl font-semibold">Party: {{ party()?.name }}</h1>
-    <p class="text-muted-foreground">Share the QR Code to let your friends join you</p>
-    <div [innerHTML]="qrcode()" class="size-60"></div>
-    @if (party()?.users && party()!.users.length >= 1) {
-      <div>
-        <h2 class="text-xl mb-2">Users list</h2>
-        <ul class="flex flex-col gap-1">
-            @for (user of party()!.users; track user.id) {
-              @if (user.id === party()?.adminId) {
-                <li class="text-base flex items-center gap-2"><z-badge>Admin</z-badge>{{ user.username }}</li>
-              } @else {
-                <li class="text-base">{{ user.username }}</li>
-              }
+    @if (party()) {
+      <div class="grid gap-y-10 gap-x-6 grid-cols-3 w-full">
+        <div class="col-span-3 md:col-span-2">
+          <h1 class="text-4xl font-semibold mb-6">Party: {{ party()?.name }}</h1>
+          <p class="mb-10">Next step : Share the Qrcode and then, click on start party to start</p>
+
+          <div>
+            <h2 class="text-xl font-semibold mb-2">Users list</h2>
+          @if (party()?.users && party()!.users.length >= 1) {
+              <ul class="flex flex-col gap-1">
+                  @for (user of party()!.users; track user.id) {
+                    <z-item zVariant="outline">
+                      <z-item-media zVariant="icon">
+                        <ng-icon name="lucideUserStar" />
+                      </z-item-media>
+                      <z-item-content>
+                        <z-item-title>{{ user.username }}</z-item-title>
+                      </z-item-content>
+                      @if (user.id === party()?.adminId) {
+                        <z-item-actions>
+                          <z-badge>Admin</z-badge>
+                        </z-item-actions>
+                      } @else if (isUserAdmin()) {
+                        <button z-button zType="destructive">Delete user</button>
+                      }
+                    </z-item>
+                  }
+              </ul>
+            } @else {
+              <p>No users found</p>
             }
-        </ul>
+          </div>
+        </div>
+        <div class="border rounded-md p-8 bg-primary text-white col-span-3 md:col-span-1">
+          <p class="text-sm mb-6 italic">Share the QR Code to let your friends join you</p>
+          <button [innerHTML]="qrcode()" (click)="copyLink()" class="w-full p rounded-md border cursor-pointer"></button>
+          @if (isUserAdmin()) {
+            <a z-button zSize="lg" zType="secondary" routerLink="/party" class="mt-8">Start party</a>
+          }
+        </div>
       </div>
     } @else {
-      <p>No users found</p>
+      <div class="w-full">
+        <h1 class="text-4xl font-semibold mb-6">Party not found or not accessible</h1>
+      </div>
     }
-    <div class="flex items-center gap-3">
-      <a z-button routerLink="">Home</a>
-      <a z-button routerLink="/party">Next step</a>
-      <!-- @if () -->
-      <a z-button routerLink="/party">Edit party</a>
-    </div>
   }
 </main>

@@ -36,6 +36,7 @@ router
       .group(() => {
         router.post('', [controllers.Parties, 'store'])
         router.get(':partyId', [controllers.Parties, 'show'])
+        router.get(':partyId/join', [controllers.Parties, 'join'])
       })
       .prefix('party')
       .as('party')

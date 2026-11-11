@@ -1,17 +1,53 @@
-import { randomUUID } from 'node:crypto'
-import { BaseModel, beforeCreate, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import { randomInt, randomUUID } from 'node:crypto'
+import {
+  BaseModel,
+  beforeCreate,
+  beforeSave,
+  belongsTo,
+  column,
+  manyToMany,
+} from '@adonisjs/lucid/orm'
 import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { DateTime } from 'luxon'
 import User from '#models/user'
+import encryption from '@adonisjs/core/services/encryption'
+
+const PARTY_PASSWORD_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+const PARTY_PASSWORD_LENGTH = 8
 
 export default class Parties extends BaseModel {
+  static generatePartyPassword(length = PARTY_PASSWORD_LENGTH) {
+    let password = ''
+
+    for (let i = 0; i < length; i++) {
+      password += PARTY_PASSWORD_CHARSET[randomInt(PARTY_PASSWORD_CHARSET.length)]
+    }
+
+    return password
+  }
+
   @beforeCreate()
   static assignUuid(party: Parties) {
     party.uuid = randomUUID()
   }
 
+  @beforeCreate()
+  static assignPassword(party: Parties) {
+    party.password = Parties.generatePartyPassword()
+  }
+
+  @beforeSave()
+  static async encryptPassword(party: Parties) {
+    if (party.$dirty.password) {
+      party.password = await encryption.encrypt(party.password)
+    }
+  }
+
   @column({ isPrimary: true })
   declare uuid: string
+
+  @column()
+  declare password: string
 
   @column()
   declare name: string

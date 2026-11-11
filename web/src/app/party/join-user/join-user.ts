@@ -30,26 +30,26 @@ export class JoinUser {
   party = signal<Party | undefined>(undefined)
 
   form = new FormGroup({
-    // username: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)]})
-    username: new FormControl({
-      value: this.authService.currentUser()?.username ?? '',
-      disabled: this.authService.currentUser() !== undefined
-    }, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(150)]
-    }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8), Validators.maxLength(8)]})
   })
 
   constructor() {
+    const params = new URLSearchParams(document.location.search);
+    const password = params.get('password')
+    if (password) {
+      this.form.setValue({ password })
+    }
+    // const partyId = params.get('party')
     effect(() => {
       const partyId = this.partyId()
       if (partyId) {
-        this.partyService.getParty(partyId).subscribe({
-          next: async (party) => {
+        this.partyService.join(partyId).subscribe({
+          next: (party) => {
             this.party.set(party)
             this.loading.set(false)
           },
           error: () => {
+            this.sonner.error('Party not found')
             this.router.navigateByUrl('')
           },
         })
@@ -59,7 +59,8 @@ export class JoinUser {
 
   onSubmit() {
     const party = this.party()
-      if (!party) {
+    const user = this.authService.currentUser()
+      if (!party || !user) {
         return
       }
       this.errors.set({})
@@ -77,9 +78,8 @@ export class JoinUser {
         return
       }
       const formData = this.form.getRawValue()
-      this.partyService.addUser(party.uuid, formData).subscribe({
-        next: (user) => {
-          // this.authService.currentUser.set(user)
+      this.partyService.addUser(party.uuid, { userId: user.id, password: formData.password}).subscribe({
+        next: () => {
           this.router.navigateByUrl(`party/${party.uuid}`)
         },
         error: () => {

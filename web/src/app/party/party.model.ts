@@ -1,3 +1,5 @@
+import { User } from "@/auth/auth.model"
+
 export interface Party {
   uuid: string
   name: string
@@ -6,11 +8,6 @@ export interface Party {
   adminId: number
   createdAt: Date
   updatedAt: Date
-}
-
-export interface User {
-  id: number
-  createdAt: Date
-  updatedAt: Date
-  username: string
+  admin: { id: number, username: string, initials: string }
+  password?: string
 }

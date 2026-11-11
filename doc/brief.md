@@ -39,6 +39,15 @@ Form :
 11. When all words are guessed, the party ends
 12. Button to restart party purposed on party creator
 
+## Screens
+1. When user create party it shares QRcode
+2. Users register and go to party
+3. When all users are ready, admin start party. 
+4. It will create teams
+5. select guessers
+6. Show cards
+7. Start game
+
 
 ## Rules 
 
