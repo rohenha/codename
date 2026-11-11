@@ -1,0 +1,13 @@
+<header class="flex items-center justify-between gap-2 px-6 py-4 border-b sticky top-0 w-full">
+  <a routerLink="/" class="text-base font-semibold">Codename</a>
+  <nav class="flex items-center gap-2">
+    @if (authService.currentUser()) {
+      <z-avatar [zFallback]="authService.currentUser()?.initials ?? ''"></z-avatar>
+      <a z-button routerLink="/party/create">Create party</a>
+      <button z-button (click)="logout()" zType="destructive">logout</button>
+    } @else {
+      <a z-button routerLink="/auth/login">Login</a>
+      <a z-button routerLink="/auth/signup" zType="secondary">Signup</a>
+    }
+  </nav>
+</header>

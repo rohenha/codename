@@ -2,12 +2,6 @@
   <h1 class="text-4xl font-semibold">Codename game</h1>
   <p class="text-muted-foreground">Angular 21 with Zard UI, backed by an AdonisJS REST API.</p>
   @if (authService.currentUser()) {
-    <h2 class="text-base">Hello {{ authService.currentUser()?.username }}</h2>
-    <div class="flex items-center gap-3">
-      <a z-button routerLink="/party/create">Create party</a>
-      <a z-button routerLink="/party/join">Join party</a>
-      <button z-button (click)="logout()">logout</button>
-    </div>
     <app-parties-list class="w-full"></app-parties-list>
   } @else {
     <div class="flex items-center gap-3">
