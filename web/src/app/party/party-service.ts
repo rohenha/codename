@@ -36,4 +36,9 @@ export class PartyService {
     const baseUrl = environment.apiUrl
     return this.httpClient.post<{ User: User }>(`${baseUrl}party/${id}/add-user`, payload)
   }
+
+  removeUser(id: string, payload : { userId: number }) {
+    const baseUrl = environment.apiUrl
+    return this.httpClient.post<{ User: User }>(`${baseUrl}party/${id}/remove-user`, payload)
+  }
 }

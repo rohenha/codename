@@ -11,6 +11,7 @@ import { ZardBadgeComponent } from '@/shared/components/badge';
 import { AuthService } from '@/auth/auth-service';
 import { ZardItemComponent, ZardItemMediaComponent, ZardItemContentComponent, ZardItemTitleComponent, ZardItemActionsComponent } from '@/shared/components/item';
 import { NgIcon } from '@ng-icons/core';
+import { delayLoading } from '@/tools/events';
 
 @Component({
   selector: 'app-party-base',
@@ -26,6 +27,8 @@ export class PartyBase {
   party = signal<Party | undefined>(undefined)
   router = inject(Router)
   loading = signal(true)
+  loadingDelete = signal(false)
+  deleteId = signal<string|undefined>(undefined)
   protected readonly sonner = inject(ZardSonnerService)
   qrcode = signal<SafeHtml | null>('')
   isUserAdmin = computed(() => {
@@ -82,5 +85,18 @@ export class PartyBase {
     }
     await navigator.clipboard.writeText(urlToJoin);
     this.sonner.success('link copied !')
+  }
+
+  async removeUser() {
+    const delayCancel = delayLoading(() => {
+      this.loadingDelete.set(true)
+      return () => void 0
+    }, 100)
+
+    setTimeout(() => {
+      delayCancel(() => {
+        this.loadingDelete.set(false)
+      })
+    }, 4000);
   }
 }

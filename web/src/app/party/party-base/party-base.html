@@ -26,7 +26,14 @@
                           <z-badge>Admin</z-badge>
                         </z-item-actions>
                       } @else if (isUserAdmin()) {
-                        <button z-button zType="destructive">Delete user</button>
+                         <z-item-actions>
+                           @if (deleteId() === party()?.uuid) {
+                             <button z-button zType="destructive" (click)="removeUser()" [zDisabled]="loadingDelete()" [zLoading]="loadingDelete()" >Confirm</button>
+                             <button z-button zType="secondary" (click)="deleteId.set(undefined)" [zDisabled]="loadingDelete()">Cancel</button>
+                           } @else {
+                             <button z-button zType="destructive" (click)="deleteId.set(party()?.uuid)" [zDisabled]="loadingDelete()">Delete user</button>
+                           }
+                         </z-item-actions>
                       }
                     </z-item>
                   }
@@ -47,6 +54,7 @@
     } @else {
       <div class="w-full">
         <h1 class="text-4xl font-semibold mb-6">Party not found or not accessible</h1>
+        <a z-button zSize="lg" routerLink="/">Back home</a>
       </div>
     }
   }
