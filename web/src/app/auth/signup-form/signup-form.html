@@ -1,0 +1,49 @@
+<main class="mx-auto flex min-h-screen max-w-3xl flex-col items-start justify-center gap-6 p-8">
+  <z-card class="w-full md:w-94 mx-auto">
+    @if (loading()) {
+      <z-card-content>
+        <z-spinner></z-spinner>
+      </z-card-content>
+    } @else {
+      <z-card-header>
+        <h3 class="text-4xl cols-span-full">Create Account</h3>
+      </z-card-header>
+      <z-card-content>
+        <form [formGroup]="form" class="grid grid-cols-2 gap-x-2 gap-y-6" (ngSubmit)="onSubmit()">
+          <div z-field class="col-span-full">
+            <label z-field-label for="username">Username</label>
+            <input z-input id="username" type="text" placeholder="John" formControlName="username" />
+            @if (errors()['username']) {
+              @for (error of errors()['username']; track $index) {
+                <p class="text-xs text-red-500">{{ error }}</p>
+              }
+            }
+          </div>
+          <div z-field class="col-span-full">
+            <label z-field-label for="password">Password</label>
+            <input z-input id="password" type="password" placeholder="***" formControlName="password" />
+            @if (errors()['password']) {
+              @for (error of errors()['password']; track $index) {
+                <p class="text-xs text-red-500">{{ error }}</p>
+              }
+            }
+          </div>
+          <div z-field class="col-span-full">
+            <label z-field-label for="passwordConfirmation">Confirm password</label>
+            <input z-input id="passwordConfirmation" type="password" placeholder="***" formControlName="passwordConfirmation" />
+            @if (errors()['passwordConfirmation']) {
+              @for (error of errors()['passwordConfirmation']; track $index) {
+                <p class="text-xs text-red-500">{{ error }}</p>
+              }
+            }
+            @if (form.hasError('passwordMismatch') && form.controls.passwordConfirmation.touched) {
+              <p class="text-xs text-red-500">{{ form.getError('passwordMismatch') }}</p>
+            }
+          </div>
+          <a z-button class="justify-self-start" zSize="lg" zType="outline" routerLink="/">Back</a>
+          <button z-button type="submit" class="justify-self-end" zSize="lg" [zLoading]="loading()" [zDisabled]="loading()">Create account</button>
+        </form>
+      </z-card-content>
+    }
+  </z-card>
+</main>

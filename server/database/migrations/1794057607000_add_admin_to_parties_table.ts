@@ -6,20 +6,20 @@ export default class extends BaseSchema {
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
       table
-        .uuid('admin_uuid')
+        .integer('admin_id')
+        .unsigned()
         .nullable()
-        .unique()
-        .references('uuid')
-        .inTable('party_users')
+        .references('id')
+        .inTable('users')
         .onDelete('SET NULL')
     })
   }
 
   async down() {
     this.schema.alterTable(this.tableName, (table) => {
-      table.dropForeign(['admin_uuid'])
-      table.dropUnique(['admin_uuid'])
-      table.dropColumn('admin_uuid')
+      table.dropForeign(['admin_id'])
+      table.dropUnique(['admin_id'])
+      table.dropColumn('admin_id')
     })
   }
 }

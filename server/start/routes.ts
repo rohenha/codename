@@ -7,30 +7,48 @@
 |
 */
 
+import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import { controllers } from '#generated/controllers'
-import { middleware } from '#start/kernel'
 
-router.get('/', async () => ({ name: 'codename-api' }))
+router.get('/', () => {
+  return { hello: 'world' }
+})
 
-router.get('/api/health', async () => ({ status: 'ok' }))
-
-router.get('/api/themes/options', [controllers.Themes, 'options'])
-router.post('/api/auth/refresh', [controllers.PartyUsers, 'refresh'])
-router.post('/api/auth/logout', [controllers.PartyUsers, 'logout'])
 router
-  .post('/api/party', [controllers.Parties, 'store'])
-  .use(middleware.partyOptionalAuth())
-router.get('/api/party/:partyId', [controllers.Parties, 'find'])
-router
-  .post('/api/party/:partyId/add-user', [controllers.Parties, 'addUser'])
-  .use(middleware.partyOptionalAuth())
+  .group(() => {
+    router
+      .group(() => {
+        router.post('signup', [controllers.NewAccount, 'store'])
+        router.post('login', [controllers.AccessTokens, 'store'])
+      })
+      .prefix('auth')
+      .as('auth')
 
-/**
- * Routes requiring an authenticated party player.
- */
-router.get('/api/me', [controllers.PartyUsers, 'me']).use(middleware.partyAuth())
-router
-  .get('/api/party/:partyId/round', [controllers.Parties, 'roundGeneration'])
-  .use(middleware.partyAuth())
-  .as('parties.party_round_generation')
+    router
+      .group(() => {
+        router.get('options', [controllers.Themes, 'options'])
+      })
+      .prefix('themes')
+      .as('themes')
+
+    router
+      .group(() => {
+        router.post('', [controllers.Parties, 'store'])
+        router.get(':partyId', [controllers.Parties, 'show'])
+      })
+      .prefix('party')
+      .as('party')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('profile', [controllers.Profile, 'show'])
+        router.get('parties', [controllers.Profile, 'parties'])
+        router.post('logout', [controllers.AccessTokens, 'destroy'])
+      })
+      .prefix('account')
+      .as('profile')
+      .use(middleware.auth())
+  })
+  .prefix('/api/v1')
