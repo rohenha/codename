@@ -1,9 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { themes } from '#themes/themes'
 import { type Theme } from '#themes/theme.model'
-import { createPartyValidator } from '#validators/party'
-import { ValidationError } from '@vinejs/vine'
 import Parties from '#models/parties'
+import { createPartyValidator } from '#validators/party'
+import PartyTransformer from '#transformers/party_transformer'
+// type DatabaseError = {
+//   message?: string
+//   code?: string
+//   errno?: number
+//   sqlState?: string
+//   sqlMessage?: string
+//   sql?: string
+// }
 
 export default class PartiesController {
   async roundGeneration() {
@@ -21,66 +29,21 @@ export default class PartiesController {
     }
   }
 
-  async store({ request, response }: HttpContext) {
-    try {
-      const payload = await createPartyValidator.validate(request.all())
-      let party: Parties
-      try {
-        party = await Parties.create({
-          name: payload.name,
-          themes: payload.themes,
-        })
-      } catch (error) {
-        const dbError = error as {
-          message?: string
-          code?: string
-          errno?: number
-          sqlState?: string
-          sqlMessage?: string
-          sql?: string
-        }
+  async store({ request, auth, serialize }: HttpContext) {
+    const { name, themes: themesArray } = await request.validateUsing(createPartyValidator)
+    const user = await auth.getUserOrFail()
+    const party = await Parties.create({ name, themes: themesArray, adminId: user.id })
+    await party.related('users').attach([user.id])
 
-        return response.status(500).send({
-          errors: [
-            {
-              message: 'Unable to create party',
-              details: {
-                message: dbError.message ?? 'Unknown database error',
-                code: dbError.code ?? null,
-                errno: dbError.errno ?? null,
-                sqlState: dbError.sqlState ?? null,
-                sqlMessage: dbError.sqlMessage ?? null,
-                sql: dbError.sql ?? null,
-              },
-            },
-          ],
-        })
-      }
-
-      return {
-        party,
-        errors: [],
-      }
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        return response.status(422).send({
-          errors: error.messages,
-        })
-      }
-
-      return response.status(500).send({
-        errors: [
-          {
-            message: 'Unexpected server error',
-          },
-        ],
-      })
-    }
+    return serialize({
+      party: PartyTransformer.transform(party),
+    })
   }
 
-  async find({ params }: HttpContext) {
-    const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
-
-    return party
+  async show({ params, serialize }: HttpContext) {
+    const party = await Parties.query().where('uuid', params.partyId).preload('users').firstOrFail()
+    return serialize({
+      party: PartyTransformer.transform(party),
+    })
   }
 }

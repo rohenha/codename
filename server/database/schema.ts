@@ -8,14 +8,14 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class PartySchema extends BaseModel {
-  static $columns = ['createdAt', 'name', 'players', 'themes', 'updatedAt', 'uuid'] as const
+  static $columns = ['adminId', 'createdAt', 'name', 'themes', 'updatedAt', 'uuid'] as const
   $columns = PartySchema.$columns
+  @column()
+  declare adminId: number | null
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime | null
   @column()
   declare name: string | null
-  @column()
-  declare players: number | null
   @column()
   declare themes: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -24,13 +24,28 @@ export class PartySchema extends BaseModel {
   declare uuid: string
 }
 
+export class PartyMemberSchema extends BaseModel {
+  static $columns = ['createdAt', 'partyUuid', 'userId'] as const
+  $columns = PartyMemberSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare partyUuid: string
+  @column()
+  declare userId: number
+}
+
 export class UserSchema extends BaseModel {
-  static $columns = ['createdAt', 'id', 'updatedAt'] as const
+  static $columns = ['createdAt', 'id', 'password', 'updatedAt', 'username'] as const
   $columns = UserSchema.$columns
   @column.dateTime({ autoCreate: true })
-  declare createdAt: DateTime | null
+  declare createdAt: DateTime
   @column({ isPrimary: true })
   declare id: number
+  @column({ serializeAs: null })
+  declare password: string
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime | null
+  @column()
+  declare username: string
 }
