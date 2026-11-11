@@ -28,7 +28,7 @@ export class PartyBase {
   router = inject(Router)
   loading = signal(true)
   loadingDelete = signal(false)
-  deleteId = signal<string|undefined>(undefined)
+  deleteId = signal<number|undefined>(undefined)
   protected readonly sonner = inject(ZardSonnerService)
   qrcode = signal<SafeHtml | null>('')
   isUserAdmin = computed(() => {
@@ -66,7 +66,6 @@ export class PartyBase {
     if (!party) {
       return ''
     }
-    console.log(party)
     const urlTree = this.router.createUrlTree(['party' , party.uuid, 'join'])
     return `${window.location.origin}${this.router.serializeUrl(urlTree)}?password=${party.password}`
   }
@@ -88,15 +87,34 @@ export class PartyBase {
   }
 
   async removeUser() {
+    const party = this.party()
+    const deleteId = this.deleteId()
+    const loadingDelete = this.loadingDelete()
+    if (!party || !deleteId || loadingDelete) {
+      return
+    }
+
     const delayCancel = delayLoading(() => {
       this.loadingDelete.set(true)
       return () => void 0
     }, 100)
 
-    setTimeout(() => {
-      delayCancel(() => {
-        this.loadingDelete.set(false)
-      })
-    }, 4000);
+    this.partyService.removeUser(party.uuid, { userId: deleteId}).subscribe({
+      next: (partyUpdated) => {
+        const userDeleted = party.users.find((user) => user.id === deleteId)
+        this.sonner.success(`User ${userDeleted?.username} has been deleted`)
+        this.party.set(partyUpdated)
+        delayCancel(() => {
+          this.loadingDelete.set(false)
+        })
+      },
+      error: () => {
+        const userDeleted = party.users.find((user) => user.id === deleteId)
+        this.sonner.success(`There is an error when deleting ${userDeleted?.username}`)
+        delayCancel(() => {
+          this.loadingDelete.set(false)
+        })
+      }
+    })
   }
 }

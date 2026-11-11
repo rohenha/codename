@@ -39,6 +39,8 @@ export class PartyService {
 
   removeUser(id: string, payload : { userId: number }) {
     const baseUrl = environment.apiUrl
-    return this.httpClient.post<{ User: User }>(`${baseUrl}party/${id}/remove-user`, payload)
+    return this.httpClient.post<{ data: { party: Party } }>(`${baseUrl}party/${id}/remove-user`, payload).pipe(map((response) => {
+      return response.data.party
+    }))
   }
 }

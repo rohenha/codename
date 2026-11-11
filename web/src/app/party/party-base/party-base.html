@@ -16,24 +16,33 @@
                   @for (user of party()!.users; track user.id) {
                     <z-item zVariant="outline">
                       <z-item-media zVariant="icon">
-                        <ng-icon name="lucideUserStar" />
+                        <ng-icon [name]="user.id === party()?.adminId ? 'lucideUserStar' : 'lucideUser'" />
                       </z-item-media>
                       <z-item-content>
                         <z-item-title>{{ user.username }}</z-item-title>
                       </z-item-content>
                       @if (user.id === party()?.adminId) {
                         <z-item-actions>
+                          @if (authService.currentUser()?.id === user.id) {
+                            <z-badge zType="secondary">Me</z-badge>
+                          }
                           <z-badge>Admin</z-badge>
                         </z-item-actions>
                       } @else if (isUserAdmin()) {
                          <z-item-actions>
-                           @if (deleteId() === party()?.uuid) {
-                             <button z-button zType="destructive" (click)="removeUser()" [zDisabled]="loadingDelete()" [zLoading]="loadingDelete()" >Confirm</button>
-                             <button z-button zType="secondary" (click)="deleteId.set(undefined)" [zDisabled]="loadingDelete()">Cancel</button>
+                           @if (deleteId() === user.id) {
+                             <button z-button zSize="sm" zType="destructive" (click)="removeUser()" [zDisabled]="loadingDelete()" [zLoading]="loadingDelete()" >Confirm</button>
+                             <button z-button zSize="sm" zType="secondary" (click)="deleteId.set(undefined)" [zDisabled]="loadingDelete()">Cancel</button>
                            } @else {
-                             <button z-button zType="destructive" (click)="deleteId.set(party()?.uuid)" [zDisabled]="loadingDelete()">Delete user</button>
+                             <button z-button zSize="sm" zType="destructive" (click)="deleteId.set(user.id)" [zDisabled]="loadingDelete()">Delete user</button>
                            }
                          </z-item-actions>
+                      } @else {
+                        @if (authService.currentUser()?.id === user.id) {
+                          <z-item-actions>
+                            <z-badge zType="secondary">Me</z-badge>
+                          </z-item-actions>
+                        }
                       }
                     </z-item>
                   }
