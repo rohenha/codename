@@ -1,6 +1,6 @@
 import { ZardInputComponent } from '@/shared/components/input';
 import { ZardFieldImports } from '@/shared/components/field/field.imports';
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, resource, signal } from '@angular/core';
 import { ZardCardComponent, ZardCardHeaderComponent, ZardCardContentComponent } from '@/shared/components/card';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSelectImports } from '@/shared/components/select/select.imports'
@@ -13,6 +13,7 @@ import { ZardSpinnerComponent } from '@/shared/components/spinner';
 import { getErrors } from '@/tools/form';
 import { Party } from '@/party/party.model';
 import { AuthService } from '@/auth/auth-service';
+import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-join-form',
   imports: [ZardSpinnerComponent, ZardInputComponent, ZardFieldImports, ZardCardComponent, ZardCardHeaderComponent, ZardCardContentComponent, ZardButtonComponent, ZardSelectImports, RouterLink, ReactiveFormsModule],
@@ -21,50 +22,48 @@ import { AuthService } from '@/auth/auth-service';
 })
 export class JoinUser {
   partyId = input.required<string>()
-  loading = signal<boolean>(false)
+  loadingJoin = signal<boolean>(false)
   router = inject(Router)
   protected readonly sonner = inject(ZardSonnerService)
   partyService = inject(PartyService)
   authService = inject(AuthService)
   errors = signal<Record<string, string[]>>({})
-  party = signal<Party | undefined>(undefined)
+
+  partyResource = resource<Party, string>({
+    params: () => this.partyId(),
+    loader: async ({ params }) => firstValueFrom(this.partyService.getParty(params)),
+  });
+
+  party = computed(() => this.partyResource.value());
+  loading = this.partyResource.isLoading;
 
   form = new FormGroup({
-    // username: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.maxLength(150)]})
-    username: new FormControl({
-      value: this.authService.currentUser()?.username ?? '',
-      disabled: this.authService.currentUser() !== undefined
-    }, {
-      nonNullable: true,
-      validators: [Validators.required, Validators.maxLength(150)]
-    }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(8), Validators.maxLength(8)]})
   })
 
   constructor() {
+    const params = new URLSearchParams(document.location.search);
+    const password = params.get('password')
+    if (password) {
+      this.form.setValue({ password })
+    }
     effect(() => {
-      const partyId = this.partyId()
-      if (partyId) {
-        this.partyService.getParty(partyId).subscribe({
-          next: async (party) => {
-            this.party.set(party)
-            this.loading.set(false)
-          },
-          error: () => {
-            this.router.navigateByUrl('')
-          },
-        })
+      const err = this.partyResource.error();
+      if (err) {
+        this.sonner.error('Party does not exist');
       }
-    })
+    });
   }
 
   onSubmit() {
     const party = this.party()
-      if (!party) {
+    const user = this.authService.currentUser()
+      if (!party || !user) {
         return
       }
       this.errors.set({})
       const delayCancel = delayLoading(() => {
-        this.loading.set(true)
+        this.loadingJoin.set(true)
         return () => void 0
       }, 100)
       if (this.form.invalid) {
@@ -72,21 +71,20 @@ export class JoinUser {
         const errors = getErrors(this.form.controls)
         this.errors.set(errors)
         delayCancel(() => {
-          this.loading.set(false)
+          this.loadingJoin.set(false)
         })
         return
       }
       const formData = this.form.getRawValue()
-      this.partyService.addUser(party.uuid, formData).subscribe({
-        next: (user) => {
-          // this.authService.currentUser.set(user)
+      this.partyService.addUser(party.uuid, { userId: user.id, password: formData.password}).subscribe({
+        next: () => {
           this.router.navigateByUrl(`party/${party.uuid}`)
         },
         error: () => {
-          this.sonner.error('Player wat not added')
-          this.errors.set({ party_id: ['Player wat not added'] })
+          this.sonner.error('Player was not added')
+          this.errors.set({ party_id: ['Player was not added'] })
           delayCancel(() => {
-            this.loading.set(false)
+            this.loadingJoin.set(false)
           })
         }
       })

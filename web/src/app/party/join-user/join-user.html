@@ -7,20 +7,23 @@
     } @else {
       <z-card-header>
         <h3 class="text-4xl cols-span-full">Join {{ party()?.name }} party</h3>
+        @if (party()?.admin) {
+          <p>Created by {{ party()?.admin?.username }}</p>
+        }
       </z-card-header>
       <z-card-content>
         <form [formGroup]="form" class="grid grid-cols-2 gap-x-2 gap-y-6">
           <div z-field class="col-span-full">
-            <label z-field-label for="username">Username</label>
-            <input z-input id="username" type="text" placeholder="John" formControlName="username" />
-            @if (errors()['party_id']) {
-              @for (error of errors()['party_id']; track $index) {
+            <label z-field-label for="username">password</label>
+            <input z-input id="password" type="text" placeholder="XKKSSKL" formControlName="password" />
+            @if (errors()['password']) {
+              @for (error of errors()['password']; track $index) {
                 <p class="text-xs text-red-500">{{ error }}</p>
               }
             }
           </div>
           <a z-button class="justify-self-start" zSize="lg" zType="outline" routerLink="/">Back</a>
-          <button z-button class="justify-self-end" zSize="lg" [zLoading]="loading()" [zDisabled]="loading()" (click)="onSubmit()">Join party</button>
+          <button z-button class="justify-self-end" zSize="lg" [zLoading]="loadingJoin()" [zDisabled]="loadingJoin()" (click)="onSubmit()">Join party</button>
         </form>
       </z-card-content>
     }

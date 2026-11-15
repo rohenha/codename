@@ -8,6 +8,7 @@ export default class extends BaseSchema {
       table.uuid('uuid').primary().notNullable()
       table.string('name')
       table.string('themes')
+      table.string('password')
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

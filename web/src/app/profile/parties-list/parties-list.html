@@ -3,21 +3,15 @@
     <h2 class="text-2xl font-semibold mb-2">My parties</h2>
     <a z-button routerLink="/party/create">Create party</a>
   </header>
-    @if (parties().length > 0) {
-      @for (party of parties(); track party.uuid) {
-        <div class="flex justify-between items-center gap-3 py-4 px-4 rounded-xl border-accent border">
-          <div>
-            <h3 class="text-md font-semibold mb-1">{{ party.name }}</h3>
-            <ul class="flex items-center gap-2">
-              @for (theme of party.themes; track theme) {
-                <z-badge>{{ theme.label }}</z-badge>
-              }
-            </ul>
-          </div>
-          <a z-button [routerLink]="`party/${party.uuid}`">See party</a>
-        </div>
-      }
+  @if (loading()) {
+      <app-party-card-skeleton/>
     } @else {
-      <p class="text-base">No parties found</p>
+      @if (parties().length > 0) {
+        @for (party of parties(); track party.uuid) {
+          <app-party-card [party]="party" />
+        }
+      } @else {
+        <p class="text-base">No parties found</p>
+      }
     }
   </div>

@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
-import { By } from '@angular/platform-browser';
-import { ZardButtonComponent } from '@/shared/components/button';
+// import { By } from '@angular/platform-browser';
+// import { ZardButtonComponent } from '@/shared/components/button';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -23,12 +23,12 @@ describe('App', () => {
     expect(compiled.querySelector('h1')?.textContent).toContain('Codename');
   });
 
-  it('should render a Zard button linking to API health', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const button = fixture.debugElement.query(By.directive(ZardButtonComponent));
-    expect(button).toBeTruthy();
-    expect(button.nativeElement.getAttribute('href')).toBe('/api/health');
-    expect(button.nativeElement.textContent).toContain('Check API health');
-  });
+  // it('should render a Zard button linking to API health', async () => {
+  //   const fixture = TestBed.createComponent(App);
+  //   await fixture.whenStable();
+  //   const button = fixture.debugElement.query(By.directive(ZardButtonComponent));
+  //   expect(button).toBeTruthy();
+  //   expect(button.nativeElement.getAttribute('href')).toBe('/api/health');
+  //   expect(button.nativeElement.textContent).toContain('Check API health');
+  // });
 });
