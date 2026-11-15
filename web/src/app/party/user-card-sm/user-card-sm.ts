@@ -11,10 +11,11 @@ import { AuthService } from '@/auth/auth-service';
 import { User } from '@/auth/auth.model';
 import { PartyService } from '../party-service';
 import { delayLoading } from '@/tools/events';
+import { LoginBadge } from '@/profile/login-badge/login-badge';
 
 @Component({
   selector: 'app-user-card-sm',
-  imports: [ZardItemComponent, ZardItemMediaComponent, NgIcon, ZardItemContentComponent, ZardItemTitleComponent, ZardItemActionsComponent, ZardBadgeComponent, ZardButtonComponent],
+  imports: [ZardItemComponent, ZardItemMediaComponent, NgIcon, ZardItemContentComponent, ZardItemTitleComponent, ZardItemActionsComponent, ZardBadgeComponent, ZardButtonComponent, LoginBadge],
   templateUrl: './user-card-sm.html',
   styleUrl: './user-card-sm.css',
 })
@@ -52,7 +53,6 @@ export class UserCardSm {
   }
 
   cancelDeleteId() {
-    // this.deleteId.set(undefined)
     this.confirmDelete.set(false)
     this.deleteEvent.emit(undefined)
   }

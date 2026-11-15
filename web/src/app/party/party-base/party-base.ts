@@ -1,14 +1,14 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, resource, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { PartyService } from '@/party/party-service';
-import { Party } from '@/party//party.model';
+import { Party } from '@/party/party.model';
 import { Router, RouterLink } from '@angular/router';
 import { ZardSpinnerComponent } from '@/shared/components/spinner';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import QRCode from 'qrcode'
+import QRCode from 'qrcode';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSonnerService } from '@/shared/components/sonner';
 import { AuthService } from '@/auth/auth-service';
-// import { delayLoading } from '@/tools/events';
 import { UserCardSm } from '../user-card-sm/user-card-sm';
 
 @Component({
@@ -18,105 +18,69 @@ import { UserCardSm } from '../user-card-sm/user-card-sm';
   styleUrl: './party-base.css',
 })
 export class PartyBase {
-  partyId = input.required<string>()
-  partyService = inject(PartyService)
-  sanitize = inject(DomSanitizer)
-  authService = inject(AuthService)
-  party = signal<Party | undefined>(undefined)
-  router = inject(Router)
-  loading = signal(true)
-  loadingDelete = signal(false)
-  deleteId = signal<number|undefined>(undefined)
-  protected readonly sonner = inject(ZardSonnerService)
-  qrcode = signal<SafeHtml | null>('')
-  isUserAdmin = computed(() => {
-    const user = this.authService.currentUser()
-    const party = this.party()
-    if (!party || !user || user.id !== party.adminId) {
-      return false
-    }
+  partyId = input.required<string>();
+  partyService = inject(PartyService);
+  sanitize = inject(DomSanitizer);
+  authService = inject(AuthService);
+  router = inject(Router);
+  protected readonly sonner = inject(ZardSonnerService);
 
-    return true
-  })
+  partyResource = resource<Party, string>({
+    params: () => this.partyId(),
+    loader: async ({ params }) => firstValueFrom(this.partyService.getParty(params)),
+  });
+
+  party = computed(() => this.partyResource.value());
+  loading = this.partyResource.isLoading;
+
+  qrcodeResource = resource<SafeHtml | null, Party | undefined>({
+    params: () => this.party(),
+    loader: async ({ params }) => {
+      const party = params;
+      if (!party) {
+        return null;
+      }
+      const urlToJoin = this.getCopyLink(party);
+      const qrcodeGenerated = await QRCode.toString(urlToJoin);
+      return this.sanitize.bypassSecurityTrustHtml(qrcodeGenerated);
+    },
+  });
+  qrcode = computed(() => this.qrcodeResource.value());
+  isUserAdmin = computed(() => {
+    const user = this.authService.currentUser();
+    const party = this.party();
+    return Boolean(party && user && user.id === party.adminId);
+  });
+
+  loadingDelete = signal(false);
+  deleteId = signal<number | undefined>(undefined);
+
   constructor() {
     effect(() => {
-      const partyId = this.partyId()
-      if (partyId) {
-        this.partyService.getParty(partyId).subscribe({
-          next: async (party) => {
-            this.party.set(party)
-            const qrcodeSanitized = await this.generateQrCodeUrl()
-            this.loading.set(false)
-            this.qrcode.set(qrcodeSanitized)
-          },
-          error: () => {
-            this.loading.set(false)
-            this.sonner.error('Party does not exist')
-            // this.router.navigateByUrl('')
-          },
-        })
+      const err = this.partyResource.error();
+      if (err) {
+        this.sonner.error('Party does not exist');
       }
-    })
+    });
   }
 
-  getCopyLink(): string {
-    const party = this.party()
-    if (!party) {
-      return ''
-    }
-    const urlTree = this.router.createUrlTree(['party' , party.uuid, 'join'])
-    return `${window.location.origin}${this.router.serializeUrl(urlTree)}?password=${party.password}`
-  }
-
-  async generateQrCodeUrl() {
-    const urlToJoin = this.getCopyLink()
-    const qrcodeGenerated = await QRCode.toString(urlToJoin)
-    return this.sanitize.bypassSecurityTrustHtml(qrcodeGenerated);
+  getCopyLink(party: Party): string {
+    const urlTree = this.router.createUrlTree(['party', party.uuid, 'join']);
+    return `${window.location.origin}${this.router.serializeUrl(urlTree)}?password=${party.password}`;
   }
 
   async copyLink() {
-    const urlToJoin = this.getCopyLink()
-    if (!urlToJoin) {
-      this.sonner.error('Link error')
-      return
+    const party = this.party();
+    if (!party) {
+      this.sonner.error('Link error');
+      return;
     }
+    const urlToJoin = this.getCopyLink(party);
     await navigator.clipboard.writeText(urlToJoin);
-    this.sonner.success('link copied !')
+    this.sonner.success('link copied !');
   }
 
   afterDeleteUser(partyUpdated: Party) {
-    this.party.set(partyUpdated)
+    this.partyResource.update(() => partyUpdated);
   }
-
-  // async removeUser() {
-  //   const party = this.party()
-  //   const deleteId = this.deleteId()
-  //   const loadingDelete = this.loadingDelete()
-  //   if (!party || !deleteId || loadingDelete) {
-  //     return
-  //   }
-
-  //   const delayCancel = delayLoading(() => {
-  //     this.loadingDelete.set(true)
-  //     return () => void 0
-  //   }, 100)
-
-  //   this.partyService.removeUser(party.uuid, { userId: deleteId}).subscribe({
-  //     next: (partyUpdated) => {
-  //       const userDeleted = party.users.find((user) => user.id === deleteId)
-  //       this.sonner.success(`User ${userDeleted?.username} has been deleted`)
-  //       this.party.set(partyUpdated)
-  //       delayCancel(() => {
-  //         this.loadingDelete.set(false)
-  //       })
-  //     },
-  //     error: () => {
-  //       const userDeleted = party.users.find((user) => user.id === deleteId)
-  //       this.sonner.success(`There is an error when deleting ${userDeleted?.username}`)
-  //       delayCancel(() => {
-  //         this.loadingDelete.set(false)
-  //       })
-  //     }
-  //   })
-  // }
 }
