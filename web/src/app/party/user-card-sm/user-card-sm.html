@@ -1,0 +1,33 @@
+<z-item zVariant="outline">
+  <z-item-media zVariant="icon">
+    <ng-icon [name]="user().id === party()?.adminId ? 'lucideUserStar' : 'lucideUser'" />
+  </z-item-media>
+  <z-item-content>
+    <z-item-title>
+      {{ user().username }}
+      <span class="w-2 h-2 rounded-2xl inline-block bg-green-400"></span>
+    </z-item-title>
+  </z-item-content>
+  <!-- @if (isMe()) {
+    <z-item-actions>
+      @if (authService.currentUser()?.id === user().id) {
+        <z-badge zType="secondary">Me</z-badge>
+      }
+      <z-badge>Admin</z-badge>
+    </z-item-actions> -->
+  <z-item-actions>
+    @if (isAdmin()) {
+      <z-badge>Admin</z-badge>
+    }
+    @if (isMe()) {
+      <z-badge zType="secondary">Me</z-badge>
+    } @else if (canUserEdit()) {
+        @if (confirmDelete()) {
+          <button z-button zSize="sm" zType="destructive" (click)="removeUser()" [zDisabled]="loadingDelete()" [zLoading]="loadingDelete()" >Confirm</button>
+          <button z-button zSize="sm" zType="secondary" (click)="cancelDeleteId()" [zDisabled]="loadingDelete()">Cancel</button>
+        } @else {
+          <button z-button zSize="sm" zType="destructive" (click)="setDeleteId()" [zDisabled]="loadingDelete() || isEditable()">Delete user</button>
+        }
+    }
+  </z-item-actions>
+</z-item>

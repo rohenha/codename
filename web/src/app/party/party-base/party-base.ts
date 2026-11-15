@@ -7,15 +7,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import QRCode from 'qrcode'
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSonnerService } from '@/shared/components/sonner';
-import { ZardBadgeComponent } from '@/shared/components/badge';
 import { AuthService } from '@/auth/auth-service';
-import { ZardItemComponent, ZardItemMediaComponent, ZardItemContentComponent, ZardItemTitleComponent, ZardItemActionsComponent } from '@/shared/components/item';
-import { NgIcon } from '@ng-icons/core';
-import { delayLoading } from '@/tools/events';
+// import { delayLoading } from '@/tools/events';
+import { UserCardSm } from '../user-card-sm/user-card-sm';
 
 @Component({
   selector: 'app-party-base',
-  imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink, ZardBadgeComponent, ZardItemComponent, ZardItemMediaComponent, ZardItemContentComponent, ZardItemTitleComponent, ZardItemActionsComponent, NgIcon],
+  imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink, UserCardSm],
   templateUrl: './party-base.html',
   styleUrl: './party-base.css',
 })
@@ -86,35 +84,39 @@ export class PartyBase {
     this.sonner.success('link copied !')
   }
 
-  async removeUser() {
-    const party = this.party()
-    const deleteId = this.deleteId()
-    const loadingDelete = this.loadingDelete()
-    if (!party || !deleteId || loadingDelete) {
-      return
-    }
-
-    const delayCancel = delayLoading(() => {
-      this.loadingDelete.set(true)
-      return () => void 0
-    }, 100)
-
-    this.partyService.removeUser(party.uuid, { userId: deleteId}).subscribe({
-      next: (partyUpdated) => {
-        const userDeleted = party.users.find((user) => user.id === deleteId)
-        this.sonner.success(`User ${userDeleted?.username} has been deleted`)
-        this.party.set(partyUpdated)
-        delayCancel(() => {
-          this.loadingDelete.set(false)
-        })
-      },
-      error: () => {
-        const userDeleted = party.users.find((user) => user.id === deleteId)
-        this.sonner.success(`There is an error when deleting ${userDeleted?.username}`)
-        delayCancel(() => {
-          this.loadingDelete.set(false)
-        })
-      }
-    })
+  afterDeleteUser(partyUpdated: Party) {
+    this.party.set(partyUpdated)
   }
+
+  // async removeUser() {
+  //   const party = this.party()
+  //   const deleteId = this.deleteId()
+  //   const loadingDelete = this.loadingDelete()
+  //   if (!party || !deleteId || loadingDelete) {
+  //     return
+  //   }
+
+  //   const delayCancel = delayLoading(() => {
+  //     this.loadingDelete.set(true)
+  //     return () => void 0
+  //   }, 100)
+
+  //   this.partyService.removeUser(party.uuid, { userId: deleteId}).subscribe({
+  //     next: (partyUpdated) => {
+  //       const userDeleted = party.users.find((user) => user.id === deleteId)
+  //       this.sonner.success(`User ${userDeleted?.username} has been deleted`)
+  //       this.party.set(partyUpdated)
+  //       delayCancel(() => {
+  //         this.loadingDelete.set(false)
+  //       })
+  //     },
+  //     error: () => {
+  //       const userDeleted = party.users.find((user) => user.id === deleteId)
+  //       this.sonner.success(`There is an error when deleting ${userDeleted?.username}`)
+  //       delayCancel(() => {
+  //         this.loadingDelete.set(false)
+  //       })
+  //     }
+  //   })
+  // }
 }
