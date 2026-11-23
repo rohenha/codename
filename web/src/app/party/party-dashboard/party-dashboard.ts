@@ -16,12 +16,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription } from '@adonisjs/transmit-client';
 
 @Component({
-  selector: 'app-party-base',
+  selector: 'app-party-dashboard',
   imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink, UserCardSm],
-  templateUrl: './party-base.html',
-  styleUrl: './party-base.css',
+  templateUrl: './party-dashboard.html',
+  styleUrl: './party-dashboard.css',
 })
-export class PartyBase implements OnDestroy {
+export class PartyDashboard implements OnDestroy {
   partyId = input.required<string>();
   partyService = inject(PartyService);
   sanitize = inject(DomSanitizer);

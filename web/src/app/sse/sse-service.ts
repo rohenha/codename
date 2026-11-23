@@ -31,19 +31,12 @@ export class SseService implements OnDestroy  {
     await subscription.create()
     this.subsriptions.push(subscription)
 
-    subscription.onMessage((data) => {
-      console.log('Users updated:', data)
-      callback(data)
-    })
+    subscription.onMessage(callback)
 
     return subscription
   }
 
   ngOnDestroy() {
     this.transmit.close()
-  }
-
-  disconnect() {
-    // this.subsriptions
   }
 }

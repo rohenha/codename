@@ -1,7 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { themes } from '#themes/themes'
 import { type Theme } from '#themes/theme.model'
-import Parties from '#models/parties'
+import Party from '#models/party'
 import {
   createPartyValidator,
   addUserPartyValidator,
@@ -11,7 +11,7 @@ import PartyTransformer from '#transformers/party_transformer'
 import encryption from '@adonisjs/core/services/encryption'
 import transmit from '@adonisjs/transmit/services/main'
 
-export default class PartiesController {
+export default class PartyController {
   async roundGeneration({ response }: HttpContext) {
     const fromThemes = ['cinema', 'sport', 'history']
     const wordsNbr = 25
@@ -30,7 +30,7 @@ export default class PartiesController {
   async store({ request, auth, serialize }: HttpContext) {
     const { name, themes: themesArray } = await request.validateUsing(createPartyValidator)
     const user = await auth.getUserOrFail()
-    const party = await Parties.create({ name, themes: themesArray, adminId: user.id })
+    const party = await Party.create({ name, themesList: themesArray, adminId: user.id })
     await party.related('users').attach([user.id])
 
     return serialize({
@@ -64,7 +64,7 @@ export default class PartiesController {
 
   async join({ params, serialize }: HttpContext) {
     // const user = await ctx.auth.getUserOrFail()
-    const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
+    const party = await Party.query().where('uuid', params.partyId).firstOrFail()
 
     return serialize({
       party: PartyTransformer.transformLight(party),
@@ -75,7 +75,7 @@ export default class PartiesController {
     const { password } = await request.validateUsing(addUserPartyValidator)
     const partyId = params.partyId
     const user = await auth.getUserOrFail()
-    const party = await Parties.query().where('uuid', partyId).preload('users').firstOrFail()
+    const party = await Party.query().where('uuid', partyId).preload('users').firstOrFail()
 
     const existsUserInParty = party.users.find((partyUser) => user.id === partyUser.id)
     const decryptedPassword = (await encryption.decrypt(party.password)) as string
@@ -130,5 +130,18 @@ export default class PartiesController {
         },
       })
     }
+  }
+
+  async initParty({ response, serialize, request, party }: HttpContext) {
+    transmit.broadcast(`party/${party.uuid}/steps`, {
+      status: 'teams',
+      message: `Party is ready`,
+    })
+
+    return null
+  }
+
+  async getTeams({ response, serialize, request, party }: HttpContext) {
+    return null
   }
 }

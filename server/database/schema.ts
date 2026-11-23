@@ -8,7 +8,7 @@ import { BaseModel, column } from '@adonisjs/lucid/orm'
 import { DateTime } from 'luxon'
 
 export class PartySchema extends BaseModel {
-  static $columns = ['adminId', 'createdAt', 'name', 'password', 'themes', 'updatedAt', 'uuid'] as const
+  static $columns = ['adminId', 'createdAt', 'name', 'password', 'round', 'step', 'themes', 'updatedAt', 'uuid'] as const
   $columns = PartySchema.$columns
   @column()
   declare adminId: number | null
@@ -18,6 +18,10 @@ export class PartySchema extends BaseModel {
   declare name: string | null
   @column({ serializeAs: null })
   declare password: string | null
+  @column()
+  declare round: number | null
+  @column()
+  declare step: string | null
   @column()
   declare themes: string | null
   @column.dateTime({ autoCreate: true, autoUpdate: true })
@@ -33,6 +37,32 @@ export class PartyMemberSchema extends BaseModel {
   declare createdAt: DateTime
   @column({ isPrimary: true })
   declare partyUuid: string
+  @column()
+  declare userId: number
+}
+
+export class TeamSchema extends BaseModel {
+  static $columns = ['createdAt', 'name', 'partyUuid', 'updatedAt', 'uuid'] as const
+  $columns = TeamSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime | null
+  @column()
+  declare name: string
+  @column()
+  declare partyUuid: string
+  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  declare updatedAt: DateTime | null
+  @column({ isPrimary: true })
+  declare uuid: string
+}
+
+export class TeamMemberSchema extends BaseModel {
+  static $columns = ['createdAt', 'teamUuid', 'userId'] as const
+  $columns = TeamMemberSchema.$columns
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+  @column({ isPrimary: true })
+  declare teamUuid: string
   @column()
   declare userId: number
 }

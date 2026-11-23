@@ -1,9 +1,9 @@
-import type Parties from '#models/parties'
+import type Party from '#models/party'
 import type User from '#models/user'
 
 declare module '@adonisjs/core/http' {
   export interface HttpContext {
-    party: Parties
+    party: Party
     user: User
   }
 }

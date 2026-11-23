@@ -29,7 +29,7 @@
         <p class="text-sm mb-6 italic">Share the QR Code to let your friends join you</p>
         <button [innerHTML]="qrcode()" (click)="copyLink()" class="w-full p rounded-md border cursor-pointer"></button>
         @if (isUserAdmin()) {
-          <a z-button zSize="lg" zType="secondary" routerLink="/party" class="mt-8">Start party</a>
+          <a z-button zSize="lg" zType="secondary" [routerLink]="`/party/${partyResource.value().uuid}/teams`" class="mt-8">Start party</a>
         } @else {
           <p class="text-base mt-8">Wait, admin will start soon party</p>
         }

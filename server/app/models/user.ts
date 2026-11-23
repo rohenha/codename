@@ -4,7 +4,8 @@ import { compose } from '@adonisjs/core/helpers'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import { column, manyToMany } from '@adonisjs/lucid/orm'
-import Parties from '#models/parties'
+import Party from '#models/party'
+import Team from './team.ts'
 
 export default class User extends compose(
   UserSchema,
@@ -16,12 +17,22 @@ export default class User extends compose(
   @column()
   declare username: string
 
-  @manyToMany(() => Parties, {
+  @manyToMany(() => Party, {
     pivotTable: 'party_members',
     localKey: 'id',
     relatedKey: 'uuid',
     pivotForeignKey: 'user_id',
     pivotRelatedForeignKey: 'party_uuid',
   })
-  declare parties: ManyToMany<typeof Parties>
+  declare parties: ManyToMany<typeof Party>
+
+  @manyToMany(() => Team, {
+    pivotTable: 'team_members',
+    localKey: 'id',
+    relatedKey: 'uuid',
+    pivotForeignKey: 'user_id',
+    pivotRelatedForeignKey: 'team_uuid',
+    onQuery: (query) => query.orderBy('name', 'desc'),
+  })
+  declare teams: ManyToMany<typeof Team>
 }

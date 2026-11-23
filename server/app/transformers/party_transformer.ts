@@ -1,15 +1,15 @@
-import type Parties from '#models/parties'
+import type Party from '#models/party'
 import type User from '#models/user'
 import { themesMap } from '#themes/themes'
 import { BaseTransformer } from '@adonisjs/core/transformers'
 import UserTransformer from '#transformers/user_transformer'
 
-export default class PartyTransformer extends BaseTransformer<Parties> {
-  static transformLight(party: Parties) {
+export default class PartyTransformer extends BaseTransformer<Party> {
+  static transformLight(party: Party) {
     return {
       uuid: party.uuid,
       name: party.name,
-      themes: party.themes.map((theme) => themesMap[theme]),
+      themes: party.themesList?.map((theme: string) => themesMap[theme]),
     }
   }
 
@@ -17,8 +17,16 @@ export default class PartyTransformer extends BaseTransformer<Parties> {
     const preloadedAdmin = this.resource.$preloaded.admin
 
     return {
-      ...this.pick(this.resource, ['uuid', 'name', 'adminId', 'createdAt', 'updatedAt', 'users']),
-      themes: this.resource.themes.map((theme) => themesMap[theme]),
+      ...this.pick(this.resource, [
+        'uuid',
+        'name',
+        'adminId',
+        'createdAt',
+        'updatedAt',
+        'users',
+        'teams',
+      ]),
+      themes: this.resource.themesList?.map((theme: string) => themesMap[theme]),
       admin:
         preloadedAdmin && !Array.isArray(preloadedAdmin)
           ? UserTransformer.transformLight(preloadedAdmin as User)

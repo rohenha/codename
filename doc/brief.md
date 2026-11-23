@@ -25,7 +25,6 @@ Multiplayer Codename app like built on Angular and Adonis JS
 1. One player will create a party
 Form :
 - party name
-- number of players
 - themes to play
 2. Share QR-code
 3. Other players scan QR-code, or go to route `join` and enter party id
@@ -44,10 +43,20 @@ Form :
 2. Users register and go to party
 3. When all users are ready, admin start party. 
 4. It will create teams
-5. select guessers
-6. Show cards
 7. Start game
 
+## Game rounds
+1. Define words
+2. Select Guesser
+3. Select words for each teams
+4. Start rounds
+
+## Round
+1. Select one team to guess
+2. Guesser need to set words to guess
+3. Each player select words to guess and if all users have selected same words, guesser can validate.
+4. Show response
+5. Restart round if all words are not guessed or if black word is not selected
 
 ## Rules 
 

@@ -40,13 +40,17 @@ router
 
     router
       .group(() => {
-        router.post('', [controllers.Parties, 'store'])
-        router.get(':partyId', [controllers.Parties, 'show']).use(middleware.party())
-        router.get(':partyId/join', [controllers.Parties, 'join'])
-        router.post(':partyId/add-user', [controllers.Parties, 'addUser'])
+        router.post('', [controllers.Party, 'store'])
+        router.get(':partyId', [controllers.Party, 'show']).use(middleware.party())
+        router.get(':partyId/join', [controllers.Party, 'join'])
+        router.post(':partyId/add-user', [controllers.Party, 'addUser'])
         router
-          .post(':partyId/remove-user', [controllers.Parties, 'removeUser'])
+          .post(':partyId/remove-user', [controllers.Party, 'removeUser'])
           .use(middleware.adminParty())
+        router
+          .post(':partyId/init-party', [controllers.Party, 'initParty'])
+          .use(middleware.adminParty())
+        router.get(':partyId/teams', [controllers.Party, 'getTeams']).use(middleware.party())
       })
       .prefix('party')
       .as('party')
