@@ -10,9 +10,15 @@
 import { middleware } from '#start/kernel'
 import router from '@adonisjs/core/services/router'
 import { controllers } from '#generated/controllers'
+import transmit from '@adonisjs/transmit/services/main'
+
+// Transmit routes
+transmit.registerRoutes((route) => {
+  route.middleware(middleware.auth())
+})
 
 router.get('/', () => {
-  return { hello: 'world' }
+  return { name: 'Codename api' }
 })
 
 router

@@ -25,6 +25,13 @@ export class PartyService {
     }))
   }
 
+  getJoinParty(id: string) {
+    const baseUrl = environment.apiUrl
+    return this.httpClient.get<{ data: { party: Party } }>(`${baseUrl}party/${id}/join`).pipe(map((response) => {
+      return response.data.party
+    }))
+  }
+
   join(id: string) {
     const baseUrl = environment.apiUrl
     return this.httpClient.get<{ data: { party: Party } }>(`${baseUrl}party/${id}/join`).pipe(map((response) => {

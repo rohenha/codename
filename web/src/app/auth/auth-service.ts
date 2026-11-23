@@ -24,7 +24,9 @@ export class AuthService {
       map((response) => {
         return response.data
       }),
-      tap((user) => this.currentUser.set(user)),
+      tap((user) => {
+        this.currentUser.set(user)
+      }),
       catchError(() => {
         this.currentUser.set(undefined)
         return of(undefined)

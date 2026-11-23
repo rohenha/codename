@@ -5,6 +5,14 @@ import { BaseTransformer } from '@adonisjs/core/transformers'
 import UserTransformer from '#transformers/user_transformer'
 
 export default class PartyTransformer extends BaseTransformer<Parties> {
+  static transformLight(party: Parties) {
+    return {
+      uuid: party.uuid,
+      name: party.name,
+      themes: party.themes.map((theme) => themesMap[theme]),
+    }
+  }
+
   toObject() {
     const preloadedAdmin = this.resource.$preloaded.admin
 

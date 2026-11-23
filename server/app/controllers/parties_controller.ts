@@ -9,6 +9,7 @@ import {
 } from '#validators/party'
 import PartyTransformer from '#transformers/party_transformer'
 import encryption from '@adonisjs/core/services/encryption'
+import transmit from '@adonisjs/transmit/services/main'
 
 export default class PartiesController {
   async roundGeneration({ response }: HttpContext) {
@@ -62,18 +63,19 @@ export default class PartiesController {
   }
 
   async join({ params, serialize }: HttpContext) {
+    // const user = await ctx.auth.getUserOrFail()
     const party = await Parties.query().where('uuid', params.partyId).firstOrFail()
 
     return serialize({
-      party: PartyTransformer.transform(party),
+      party: PartyTransformer.transformLight(party),
     })
   }
 
   async addUser({ params, auth, serialize, request, response }: HttpContext) {
     const { password } = await request.validateUsing(addUserPartyValidator)
-
+    const partyId = params.partyId
     const user = await auth.getUserOrFail()
-    const party = await Parties.query().where('uuid', params.partyId).preload('users').firstOrFail()
+    const party = await Parties.query().where('uuid', partyId).preload('users').firstOrFail()
 
     const existsUserInParty = party.users.find((partyUser) => user.id === partyUser.id)
     const decryptedPassword = (await encryption.decrypt(party.password)) as string
@@ -98,6 +100,11 @@ export default class PartiesController {
 
     await party.related('users').attach([user.id])
 
+    transmit.broadcast(`party/${partyId}/home`, {
+      status: 'added',
+      message: `User ${user.username} has been added`,
+    })
+
     return serialize({
       party: PartyTransformer.transform(party),
     })
@@ -108,6 +115,10 @@ export default class PartiesController {
     try {
       await party.related('users').detach([userId])
       await party.load('users')
+      transmit.broadcast(`party/${party.uuid}/home`, {
+        status: 'added',
+        message: `User ${userId} has been removed`,
+      })
       return serialize({
         party: PartyTransformer.transform(party),
       })

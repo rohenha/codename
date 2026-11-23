@@ -31,7 +31,7 @@ export class JoinUser {
 
   partyResource = resource<Party, string>({
     params: () => this.partyId(),
-    loader: async ({ params }) => firstValueFrom(this.partyService.getParty(params)),
+    loader: async ({ params }) => firstValueFrom(this.partyService.getJoinParty(params)),
   });
 
   party = computed(() => this.partyResource.value());

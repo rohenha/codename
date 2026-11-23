@@ -13,6 +13,7 @@
   "private": true,
   "packageManager": "npm@11.19.1",
   "dependencies": {
+    "@adonisjs/transmit-client": "^1.1.0",
     "@angular/cdk": "^21.2.14",
     "@angular/common": "21.2.25",
     "@angular/compiler": "21.2.25",
