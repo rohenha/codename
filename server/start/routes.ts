@@ -41,16 +41,25 @@ router
     router
       .group(() => {
         router.post('', [controllers.Party, 'store'])
-        router.get(':partyId', [controllers.Party, 'show']).use(middleware.party())
-        router.get(':partyId/join', [controllers.Party, 'join'])
-        router.post(':partyId/add-user', [controllers.Party, 'addUser'])
         router
-          .post(':partyId/remove-user', [controllers.Party, 'removeUser'])
-          .use(middleware.adminParty())
-        router
-          .post(':partyId/init-party', [controllers.Party, 'initParty'])
-          .use(middleware.adminParty())
-        router.get(':partyId/teams', [controllers.Party, 'getTeams']).use(middleware.party())
+          .group(() => {
+            router.get('join', [controllers.Party, 'join'])
+            router.post('add-user', [controllers.Party, 'addUser'])
+            router
+              .group(() => {
+                router.get('', [controllers.Party, 'show'])
+                router
+                  .post('remove-user', [controllers.Party, 'removeUser'])
+                  .use(middleware.adminParty())
+                router
+                  .post('init-party', [controllers.Party, 'initParty'])
+                  .use(middleware.adminParty())
+                router.get('teams', [controllers.Party, 'getTeams'])
+              })
+              .use(middleware.userParty())
+          })
+          .prefix(':partyId')
+          .use(middleware.party())
       })
       .prefix('party')
       .as('party')

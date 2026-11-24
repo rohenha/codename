@@ -51,5 +51,10 @@ export class PartyService {
     }))
   }
 
-
+  initParty(partyId: string) {
+    const baseUrl = environment.apiUrl
+    return this.httpClient.post<{ data: { party: Party } }>(`${baseUrl}party/${partyId}/init-party`, {}).pipe(map((response) => {
+      return response.data.party
+    }))
+  }
 }

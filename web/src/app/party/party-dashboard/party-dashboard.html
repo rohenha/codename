@@ -25,16 +25,19 @@
             }
         </div>
       </div>
-      <div class="border rounded-md p-8 bg-primary text-white col-span-3 md:col-span-1">
-        <p class="text-sm mb-6 italic">Share the QR Code to let your friends join you</p>
-        <button [innerHTML]="qrcode()" (click)="copyLink()" class="w-full p rounded-md border cursor-pointer"></button>
-        @if (isUserAdmin()) {
+    @if (isUserAdmin()) {
+      <div class="border rounded-md p-8 bg-primary text-white col-span-3 md:col-span-1 self-start">
+          <p class="text-sm mb-6 italic">Share the QR Code to let your friends join you</p>
+          <app-qrcode [party]="partyResource.value()"/>
           <a z-button zSize="lg" zType="secondary" [routerLink]="`/party/${partyResource.value().uuid}/teams`" class="mt-8">Start party</a>
-        } @else {
-          <p class="text-base mt-8">Wait, admin will start soon party</p>
-        }
+        </div>
+      } @else {
+        <div class="border rounded-md p-8 bg-primary text-white col-span-3 md:col-span-1 self-start">
+          <p class="text-base mb-8">Be patient ! Party will start soon</p>
+          <z-spinner class="w-8 h-8"/>
+        </div>
+      }
       </div>
-    </div>
   } @else if (partyResource.error()) {
     <div class="w-full">
       <h1 class="text-4xl font-semibold mb-6">Party not found or not accessible</h1>

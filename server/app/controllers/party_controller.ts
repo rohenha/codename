@@ -62,20 +62,15 @@ export default class PartyController {
     return partyResponse
   }
 
-  async join({ params, serialize }: HttpContext) {
-    // const user = await ctx.auth.getUserOrFail()
-    const party = await Party.query().where('uuid', params.partyId).firstOrFail()
-
+  async join({ serialize, party }: HttpContext) {
     return serialize({
       party: PartyTransformer.transformLight(party),
     })
   }
 
-  async addUser({ params, auth, serialize, request, response }: HttpContext) {
+  async addUser({ params, serialize, request, response, party, user }: HttpContext) {
     const { password } = await request.validateUsing(addUserPartyValidator)
     const partyId = params.partyId
-    const user = await auth.getUserOrFail()
-    const party = await Party.query().where('uuid', partyId).preload('users').firstOrFail()
 
     const existsUserInParty = party.users.find((partyUser) => user.id === partyUser.id)
     const decryptedPassword = (await encryption.decrypt(party.password)) as string
@@ -100,8 +95,8 @@ export default class PartyController {
 
     await party.related('users').attach([user.id])
 
-    transmit.broadcast(`party/${partyId}/home`, {
-      status: 'added',
+    transmit.broadcast(`party/${partyId}`, {
+      status: 'user_added',
       message: `User ${user.username} has been added`,
     })
 
@@ -110,18 +105,37 @@ export default class PartyController {
     })
   }
 
-  async removeUser({ response, serialize, request, party }: HttpContext) {
+  async removeUser({ response, serialize, request, party, user }: HttpContext) {
     const { userId } = await request.validateUsing(removeUserPartyValidator)
     try {
       await party.related('users').detach([userId])
       await party.load('users')
-      transmit.broadcast(`party/${party.uuid}/home`, {
-        status: 'added',
+      transmit.broadcast(`party/${party.uuid}`, {
+        status: 'user_removed',
         message: `User ${userId} has been removed`,
       })
-      return serialize({
+
+      const partyResponse = await serialize({
         party: PartyTransformer.transform(party),
       })
+
+      if (party.adminId === user.id) {
+        const decryptedPassword = (await encryption.decrypt(party.password)) as string
+
+        type SerializablePartyResponse = Awaited<ReturnType<typeof serialize>> & {
+          data: {
+            party: {
+              password?: string
+            }
+          }
+        }
+
+        const adminResponse = partyResponse as SerializablePartyResponse
+        adminResponse.data.party.password = decryptedPassword
+        return response.json(adminResponse)
+      }
+
+      return partyResponse
     } catch (e) {
       return response.status(500).json({
         error: {
@@ -134,7 +148,7 @@ export default class PartyController {
 
   async initParty({ response, serialize, request, party }: HttpContext) {
     transmit.broadcast(`party/${party.uuid}/steps`, {
-      status: 'teams',
+      status: 'party_ready',
       message: `Party is ready`,
     })
 

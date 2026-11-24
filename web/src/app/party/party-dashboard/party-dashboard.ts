@@ -1,11 +1,9 @@
-import { Component, computed, inject, input, OnDestroy, resource, signal } from '@angular/core';
+import { Component, computed, inject, input, resource, signal } from '@angular/core';
 import { filter, firstValueFrom } from 'rxjs';
 import { PartyService } from '@/party/party-service';
 import { Party } from '@/party/party.model';
 import { Router, RouterLink } from '@angular/router';
 import { ZardSpinnerComponent } from '@/shared/components/spinner';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import QRCode from 'qrcode';
 import { ZardButtonComponent } from '@/shared/components/button';
 import { ZardSonnerService } from '@/shared/components/sonner';
 import { AuthService } from '@/auth/auth-service';
@@ -13,18 +11,17 @@ import { UserCardSm } from '../user-card-sm/user-card-sm';
 import { SseService } from '@/sse/sse-service';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subscription } from '@adonisjs/transmit-client';
+import { Qrcode } from '../qrcode/qrcode';
 
 @Component({
   selector: 'app-party-dashboard',
-  imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink, UserCardSm],
+  imports: [ZardSpinnerComponent, ZardButtonComponent, RouterLink, UserCardSm, Qrcode],
   templateUrl: './party-dashboard.html',
   styleUrl: './party-dashboard.css',
 })
-export class PartyDashboard implements OnDestroy {
+export class PartyDashboard {
   partyId = input.required<string>();
   partyService = inject(PartyService);
-  sanitize = inject(DomSanitizer);
   authService = inject(AuthService);
   router = inject(Router);
   sseService = inject(SseService)
@@ -35,20 +32,6 @@ export class PartyDashboard implements OnDestroy {
     loader: async ({ params }) => firstValueFrom(this.partyService.getParty(params)),
   });
 
-  qrcodeResource = resource<SafeHtml | null, Party | undefined>({
-    params: () => this.partyResource.value(),
-    loader: async ({ params }) => {
-      const party = params;
-      if (!party) {
-        return null;
-      }
-      const urlToJoin = this.getCopyLink(party);
-      const qrcodeGenerated = await QRCode.toString(urlToJoin);
-      return this.sanitize.bypassSecurityTrustHtml(qrcodeGenerated);
-    },
-
-  });
-  qrcode = computed(() => this.qrcodeResource.value());
   isUserAdmin = computed(() => {
     const user = this.authService.currentUser();
     const party = this.partyResource.value();
@@ -58,18 +41,6 @@ export class PartyDashboard implements OnDestroy {
   loadingDelete = signal(false);
   deleteId = signal<number | undefined>(undefined);
 
-  usersSubscription: Subscription|undefined
-
-  // constructor() {
-  //   effect(() => {
-  //     const err = this.partyResource.error();
-  //     console.log(err)
-  //     if (err) {
-  //       this.sonner.error('Party does not exist');
-  //     }
-  //   });
-  // }
-
   constructor() {
     // --- SUCCÈS : connecter le SSE ---
     toObservable(this.partyResource.value)
@@ -77,12 +48,7 @@ export class PartyDashboard implements OnDestroy {
         filter((party): party is Party => !!party), // ignore undefined au départ
       )
       .subscribe(async (party) => {
-        if (!this.usersSubscription) {
-          this.usersSubscription = await this.sseService.usersSubscription(party.uuid, (data) => {
-            console.log(data)
-            this.partyResource.reload()
-          })
-        }
+        await this.sseService.partySubscription(party.uuid, this.onBroadcast.bind(this))
       });
 
     // --- ERREUR : toast 403 ---
@@ -91,36 +57,44 @@ export class PartyDashboard implements OnDestroy {
         filter((err): err is HttpErrorResponse => !!err),
       )
       .subscribe(async (err) => {
-        await this.usersSubscription?.delete()
+        await this.sseService.clearSubscription()
+        // await this.partySubscription?.delete()
         if (err.status === 403) {
           this.sonner.error('Accès interdit');
         }
+        this.router.navigateByUrl('/')
       });
-  }
-
-  ngOnDestroy(): void {
-    this.usersSubscription?.delete()
-  }
-
-
-  getCopyLink(party: Party): string {
-    const urlTree = this.router.createUrlTree(['party', party.uuid, 'join']);
-    return `${window.location.origin}${this.router.serializeUrl(urlTree)}?password=${party.password}`;
-  }
-
-  async copyLink() {
-    const party = this.partyResource.value();
-    if (!party) {
-      this.sonner.error('Link error');
-      return;
-    }
-    const urlToJoin = this.getCopyLink(party);
-    await navigator.clipboard.writeText(urlToJoin);
-    this.sonner.success('link copied !');
   }
 
   afterDeleteUser(partyUpdated: Party) {
     this.deleteId.set(undefined)
     this.partyResource.update(() => partyUpdated);
+  }
+
+  onBroadcast(data: { status: string, message: string }) {
+    const partyId = this.partyId()
+    console.log(data.status)
+    switch (data.status) {
+      case 'user_added':
+        this.partyResource.reload()
+        break;
+      case 'user_removed':
+        this.partyResource.reload()
+        break;
+      case 'start_party':
+        this.router.navigateByUrl(`/party/${partyId}/teams`)
+        break;
+      default:
+        break;
+    }
+  }
+
+  async initParty() {
+    const partyId = this.partyId()
+    this.partyService.initParty(partyId).subscribe({
+      // next: () => {
+      //   this.router.navigateByUrl(`/party/${partyId}/teams`)
+      // }
+    })
   }
 }

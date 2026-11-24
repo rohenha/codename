@@ -16,17 +16,6 @@ export default class PartyMiddleware {
       .preload('teams')
       .firstOrFail()
 
-    const existsUserInParty = party.users.find((partyUser) => user.id === partyUser.id)
-
-    if (!existsUserInParty) {
-      return ctx.response.status(403).json({
-        error: {
-          code: 'PARTY_ACCESS_DENIED',
-          message: 'You are not allowed to access to this party',
-        },
-      })
-    }
-
     ctx.party = party
     ctx.user = user
     return next()

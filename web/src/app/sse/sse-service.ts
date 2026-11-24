@@ -7,7 +7,7 @@ import { environment } from '../../environments/environment'
 })
 export class SseService implements OnDestroy  {
   transmit: Transmit
-  subsriptions: Subscription[] = []
+  subsription: Subscription | undefined = undefined
   constructor() {
     this.transmit = new Transmit({
       baseUrl: environment.sseUrl,
@@ -26,15 +26,18 @@ export class SseService implements OnDestroy  {
     })
   }
 
-  async usersSubscription(partyId: string, callback: (data: any) => void) {
-    const subscription = this.transmit.subscription(`party/${partyId}/home`)
+  async partySubscription(partyId: string, callback: (data: { status: string, message: string}) => void) {
+    const subscription = this.transmit.subscription(`party/${partyId}`)
     await subscription.create()
-    this.subsriptions.push(subscription)
+    this.subsription = subscription
 
     subscription.onMessage(callback)
-
-    return subscription
   }
+
+  async clearSubscription() {
+    await this.subsription?.delete()
+  }
+
 
   ngOnDestroy() {
     this.transmit.close()
